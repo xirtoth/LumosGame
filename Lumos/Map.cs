@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+
 using System.Threading.Tasks;
 
 namespace Lumos
@@ -54,7 +55,7 @@ namespace Lumos
                     {
                         if (random.Next(0, 2) == 1)
                         {
-                            MapData[x, y] = new Tile(MapTiles.dirt, TileTextures.DirtTexture, false, false);
+                            MapData[x, y] = new Tile(MapTiles.dirt, TileTextures.DirtTexture, true, false);
                         }
                     }
                     /* else
@@ -71,7 +72,7 @@ namespace Lumos
                      }*/
                     else
                     {
-                        MapData[x, y] = new Tile(MapTiles.dirt, TileTextures.DirtTexture, false, false);
+                        MapData[x, y] = new Tile(MapTiles.dirt, TileTextures.DirtTexture, true, false);
                     }
                 }
             }
@@ -143,40 +144,46 @@ namespace Lumos
             }
         }
 
-        public void Update()
+        public void Update(Player player)
         {
             if (!isUpdatingTiles)
             {
                 isUpdatingTiles = true;
                 Task.Run(() => UpdateTiles());
             }
+            int minX = Math.Max(0, (int)(player.Pos.X / tileWidth) - 1);
+            int minY = Math.Max(0, (int)(player.Pos.Y / tileHeight) - 1);
+            int maxX = Math.Min(Width - 1, (int)((player.Pos.X + player.Rect.Width) / tileWidth) + 1);
+            int maxY = Math.Min(Height - 1, (int)((player.Pos.Y + player.Rect.Height) / tileHeight) + 1);
+            Rectangle playerRect = player.Rect;
+
+            for (int x = minX; x <= maxX; x++)
+            {
+                for (int y = minY; y <= maxY; y++)
+                {
+                    Rectangle tileRect = new Rectangle(x * tileWidth, y * tileHeight, tileWidth, tileHeight);
+
+                    if (playerRect.Intersects(tileRect))
+                    {
+                        // Handle collision with the tile
+                        if (MapData[x, y].Collision == true)
+                        {
+                            // Example: Prevent player from passing through the dirt tile
+                            // Reset the player's position to their previous position
+                            player.Pos = player.PreviousPos;
+                        }
+                        else if (MapData[x, y].MapTile == MapTiles.water)
+                        {
+                            // Example: Handle collision with water tile
+                            // Do something when player collides with water
+                        }
+                        // Add more collision handling for other tile types if needed
+                    }
+                }
+            }
         }
 
-        /*
-         *
-         *      public void Update(Player player)
-              {
-                  Rectangle playerRect = player.Rect;
-
-                  for (int x = 0; x < Width; x++)
-                  {
-                      for (int y = 0; y < Height; y++)
-                      {
-                          Rectangle tileRect = new Rectangle(x * tileWidth, y * tileHeight, tileWidth, tileHeight);
-
-                          if (playerRect.Intersects(tileRect))
-                          {
-                              MapData[x, y] = MapTiles.water;
-                              // Handle collision, prevent player from passing through the dirt tile
-                              // For example, you can stop the player from moving in that direction or reset their position
-                              // Here, we'll reset the player's position to their previous position
-                              // player.Pos = player.PreviousPos;
-                          }
-                      }
-                  }
-              }*/
-
-        public void DrawMap(SpriteBatch spriteBatch, Player player, Vector2 cameraPos, Viewport viewport, GraphicsDevice gd, GameTime gameTime)
+        public void DrawMap(SpriteBatch spriteBatch, Player player, Microsoft.Xna.Framework.Vector2 cameraPos, Viewport viewport, GraphicsDevice gd, GameTime gameTime)
         {
             Color waterColor = Color.White;
             Color startColor = Color.White;
@@ -239,7 +246,7 @@ namespace Lumos
                             {
                                 if (MapData[x, y - 1].MapTile == MapTiles.empty)
                                 {
-                                    MapData[x, y] = new Tile(MapTiles.grassTop, TileTextures.GrassTop, false, false);
+                                    MapData[x, y] = new Tile(MapTiles.grassTop, TileTextures.GrassTop, true, false);
                                 }
                             }
                             Rectangle tileRect = new Rectangle(

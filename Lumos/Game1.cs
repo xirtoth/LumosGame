@@ -21,13 +21,13 @@ namespace Lumos
         public Vector2 _cameraPosition;
         private MouseState _previousMouseState;
         private int MapSizeX = 2000;
-        private int MapSizeY = 100;
+        private int MapSizeY = 200;
         public int _renderAreaWidth = 1000;
         public int _renderAreaHeight = 10000;
         private float EdgePanSpeed = 2f;
         private int _frameCount;
         private float _elapsedTime;
-        private Texture2D _uiRectangleTexture;
+
         private Texture2D _bg;
         private Texture2D _enemyTex;
         private Texture2D _arrow;
@@ -65,7 +65,7 @@ namespace Lumos
             _damageMessageList = new List<DamageMessage>();
             _enemies = new List<Enemy>();
             _spriteBatch = new SpriteBatch(GraphicsDevice);
-            _player = new Player(new Vector2(10 * 16, 19 * 16), "Henkka", Content.Load<Texture2D>("player"));
+            _player = new Player(new Vector2(100 * 16, 100 * 16), "Henkka", Content.Load<Texture2D>("player"));
             _myFont = Content.Load<SpriteFont>("MyFont");
             TileTextures.WaterTexture = Content.Load<Texture2D>("water");
             TileTextures.DirtTexture = Content.Load<Texture2D>("dirt");
@@ -137,7 +137,7 @@ namespace Lumos
 
                 // TODO: Add your update logic here
 
-                _map.Update();
+                _map.Update(_player);
 
                 List<DamageMessage> damageMessagesCopy = new List<DamageMessage>(_damageMessageList);
                 foreach (DamageMessage dm in damageMessagesCopy)

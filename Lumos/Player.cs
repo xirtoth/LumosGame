@@ -19,7 +19,7 @@ namespace Lumos
         public float previousBottom { get; set; }
         public MapTiles selectedTile { get; set; } = MapTiles.water;
 
-        public float MoveSpeed { get; set; } = 0.8f;
+        public float MoveSpeed { get; set; } = 2f;
 
         public Rectangle Rect { get; set; }
 
@@ -68,7 +68,7 @@ namespace Lumos
             // Apply gravity only if the player is not on the ground
             if (!IsOnGround)
             {
-                // velocityY += Gravity * deltaTime;
+                velocityY += Gravity * deltaTime;
             }
 
             CheckInput();
