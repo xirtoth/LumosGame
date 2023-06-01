@@ -18,6 +18,7 @@ namespace Lumos
         private Color Color { get; set; }
         private float elapsedTime;
         private float destroyTimer;
+        private float movedAmount;
         private Random rand = new Random();
 
         public DamageMessage(string message, float duration, Vector2 position, Game1 game)
@@ -40,9 +41,10 @@ namespace Lumos
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
             elapsedTime += deltaTime;
             destroyTimer += deltaTime;
-            if (elapsedTime >= 0.1f)
+            if (elapsedTime >= 0.1f && movedAmount < 10f)
             {
                 Position += new Vector2(0, -0.5f);
+                movedAmount += 0.5f;
                 elapsedTime = 0f;
             }
             if (destroyTimer > Duration)

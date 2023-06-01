@@ -21,7 +21,7 @@ namespace Lumos
             this.position = position;
         }
 
-        public virtual void Update(GameTime gameTime, Vector2 cameraPos)
+        public virtual void Update(GameTime gameTime, Vector2 cameraPos, Player player)
         {
         }
 

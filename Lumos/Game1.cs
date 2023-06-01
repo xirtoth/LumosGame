@@ -1,9 +1,11 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MonoGame.Extended.Sprites;
 using MonoGame.Extended.Timers;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace Lumos
@@ -14,6 +16,7 @@ namespace Lumos
         public SpriteBatch _spriteBatch;
         private Player _player;
         public SpriteFont _myFont;
+        private readonly Random rand = new Random();
         private Map _map;
         public Vector2 _cameraPosition;
         private MouseState _previousMouseState;
@@ -27,15 +30,17 @@ namespace Lumos
         private Texture2D _uiRectangleTexture;
         private Texture2D _bg;
         private Texture2D _enemyTex;
+        private Texture2D _arrow;
         private List<Rectangle> _toolRectangles;
         public List<DamageMessage> _damageMessageList;
-        private List<Enemy> _enemies;
+        public List<Enemy> _enemies;
         private float _currentTime = 0f;
         private float _lerpDuration = 100f; // Duration in seconds for each color transition
         private Color _startColor = Color.Black;
         private Color _endColor = Color.LightGoldenrodYellow;
         private bool _reverseColors = false;
         private Color _lerpedColor;
+        private bool _wasMousePressed = false;
 
         public Game1()
         {
@@ -68,17 +73,28 @@ namespace Lumos
             TileTextures.EmptyTexture = Content.Load<Texture2D>("empty");
             TileTextures.GrassTop = Content.Load<Texture2D>("grasstop");
             TileTextures.MyFont = Content.Load<SpriteFont>("MyFont");
-            _enemyTex = Content.Load<Texture2D>("arrow");
+            _arrow = Content.Load<Texture2D>("arrow");
+            _enemyTex = Content.Load<Texture2D>("Spaceship1");
             _bg = Content.Load<Texture2D>("bgmountain");
             _map = new Map(MapSizeX, MapSizeY, Content.Load<Texture2D>("player"));
             _cameraPosition = _player.Pos;
             _map.GenerateMap();
             _toolRectangles = GenerateRectangles(10, 50, 50, 20);
-            _damageMessageList.Add(new DamageMessage("testi", 2f, new Vector2(10, 10), this));
-            _damageMessageList.Add(new DamageMessage("testi2", 2f, new Vector2(20, 20), this));
-            for (int i = 0; i < 10; i++)
+            _damageMessageList.Add(new DamageMessage("testi", 5f, new Vector2(10, 10), this));
+            _damageMessageList.Add(new DamageMessage("testi2", 5f, new Vector2(20, 20), this));
+            for (int i = 0; i < 5; i++)
             {
-                _enemies.Add(new Enemy(_enemyTex, new Vector2(20 * i, 20 * i)));
+                int k = rand.Next(0, 3);
+                if (k == 0)
+                    _enemies.Add(new Enemy(_enemyTex, new Vector2(10, 10)));
+                else if (k == 1)
+                {
+                    _enemies.Add(new Enemy(TileTextures.DirtTexture, new Vector2(10, 10)));
+                }
+                else if (k == 2)
+                {
+                    _enemies.Add(new Enemy(TileTextures.WaterTexture, new Vector2(10, 10)));
+                }
             }
 
             // TODO: use this.Content to load your game content here
@@ -122,15 +138,7 @@ namespace Lumos
                 // TODO: Add your update logic here
 
                 _map.Update();
-                _elapsedTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
-                _frameCount++;
 
-                if (_elapsedTime >= 1.0f)
-                {
-                    Window.Title = "FPS: " + _frameCount;
-                    _frameCount = 0;
-                    _elapsedTime = 0.0f;
-                }
                 List<DamageMessage> damageMessagesCopy = new List<DamageMessage>(_damageMessageList);
                 foreach (DamageMessage dm in damageMessagesCopy)
                 {
@@ -138,7 +146,8 @@ namespace Lumos
                 }
                 foreach (Enemy e in _enemies)
                 {
-                    e.Update(gameTime, _cameraPosition);
+                    // if (e.IsVisible(this))
+                    e.Update(gameTime, _cameraPosition, _player);
                 }
 
                 base.Update(gameTime);
@@ -155,8 +164,9 @@ namespace Lumos
                 Vector2 mousePosition = new Vector2(mouseState.X, mouseState.Y);
                 // Adjust the mouse position by the camera's position
                 mousePosition += _cameraPosition;
+                List<Enemy> copyEnemies = new List<Enemy>(_enemies);
 
-                foreach (Enemy e in _enemies)
+                foreach (Enemy e in copyEnemies)
                 {
                     int tileXX = (int)(mousePosition.X / 16);
                     int tileYY = (int)(mousePosition.Y / 16);
@@ -176,10 +186,17 @@ namespace Lumos
                 if (tileX >= 0 && tileX < _map.Width && tileY >= 0 && tileY < _map.Height && _map.MapData[tileX, tileY].MapTile != MapTiles.empty)
                 {
                     // Change the tile at the clicked position
-
-                    _map.MapData[tileX, tileY] = new Tile(MapTiles.empty, TileTextures.EmptyTexture, false, false);
-                    _damageMessageList.Add(new DamageMessage("testi", 2f, mousePosition + new Vector2(20, -20), this));
+                    if (!_wasMousePressed)
+                    {
+                        _damageMessageList.Add(new DamageMessage("Removed " + _map.MapData[tileX, tileY].MapTile.ToString() + " at position " + tileX + "," + tileY, 5f, mousePosition + new Vector2(20, -20), this));
+                        _map.MapData[tileX, tileY] = new Tile(MapTiles.empty, TileTextures.EmptyTexture, false, false);
+                    }
                 }
+                _wasMousePressed = true;
+            }
+            else if (mouseState.LeftButton == ButtonState.Released)
+            {
+                _wasMousePressed = false;
             }
             if (mouseState.RightButton == ButtonState.Pressed)
             {
@@ -261,8 +278,10 @@ namespace Lumos
             _spriteBatch.Draw(_bg, new Vector2(0, -1000), Color.White);
             foreach (Enemy e in _enemies)
             {
+                //   if (e.IsVisible(this))
                 e.Draw(_spriteBatch, _cameraPosition);
             }
+
             _map.DrawMap(_spriteBatch, _player, _cameraPosition, GraphicsDevice.Viewport, GraphicsDevice, gameTime);
             _player.Draw(_spriteBatch, _cameraPosition, GraphicsDevice.Viewport);
             _spriteBatch.DrawString(_myFont, _player.Name + " " + _player.Pos.X + " " + _player.Pos.Y, new Vector2(-2, -2), Color.Black);
@@ -276,6 +295,15 @@ namespace Lumos
                 dm.Draw(this);
             }
 
+            _elapsedTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
+            _frameCount++;
+
+            if (_elapsedTime >= 1.0f)
+            {
+                Window.Title = "FPS: " + _frameCount;
+                _frameCount = 0;
+                _elapsedTime = 0.0f;
+            }
             _spriteBatch.End();
 
             base.Draw(gameTime);
