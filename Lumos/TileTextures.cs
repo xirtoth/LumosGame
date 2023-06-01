@@ -17,5 +17,7 @@ namespace Lumos
         public static Texture2D GrassTop { get; set; }
 
         public static Texture2D EmptyTexture { get; set; }
+
+        public static SpriteFont MyFont { get; set; }
     }
 }

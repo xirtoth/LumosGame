@@ -1,13 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Linq;
-using System.Runtime.Intrinsics.X86;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Lumos
@@ -29,7 +23,7 @@ namespace Lumos
 
         public Texture2D Texture { get; set; }
 
-        public MapTiles[,] MapData;
+        public Tile[,] MapData;
 
         private int tileWidth = 16, tileHeight = 16;
         private Random random = new Random();
@@ -43,7 +37,7 @@ namespace Lumos
             Width = width;
             Height = height;
             Texture = tex;
-            MapData = new MapTiles[Width, Height];
+            MapData = new Tile[Width, Height];
         }
 
         public void GenerateMap()
@@ -54,13 +48,13 @@ namespace Lumos
                 {
                     if (y < 20)
                     {
-                        MapData[x, y] = MapTiles.empty;
+                        MapData[x, y] = new Tile(MapTiles.empty, TileTextures.EmptyTexture, false, false);
                     }
-                    if (y < 20 && y < 19)
+                    if (y < 20 && y > 19)
                     {
                         if (random.Next(0, 2) == 1)
                         {
-                            MapData[x, y] = MapTiles.dirtTop;
+                            MapData[x, y] = new Tile(MapTiles.dirt, TileTextures.DirtTexture, false, false);
                         }
                     }
                     /* else
@@ -77,12 +71,12 @@ namespace Lumos
                      }*/
                     else
                     {
-                        MapData[x, y] = MapTiles.dirt;
+                        MapData[x, y] = new Tile(MapTiles.dirt, TileTextures.DirtTexture, false, false);
                     }
                 }
             }
 
-            for (int x = 0; x < 10; x++)
+            for (int x = 0; x < Width / 10 + Height / 10; x++)
             {
                 // Generate caves using random walk
                 // int startX = random.Next(10, Width - 10);
@@ -93,18 +87,18 @@ namespace Lumos
                 RandomWalk(startX, startY, caveSize);
             }
 
-            int waterCount = 0;
+            /*int waterCount = 0;
             while (waterCount < 100)
             {
                 int x = random.Next(Width);
                 int y = random.Next(Height);
 
-                if (MapData[x, y] == MapTiles.empty)
+                if (MapData[x, y] == new Tile(MapTiles.empty, TileTextures.EmptyTexture, false, false))
                 {
-                    MapData[x, y] = MapTiles.water;
+                    MapData[x, y] = new Tile(MapTiles.water, TileTextures.WaterTexture, false, false);
                     waterCount++;
                 }
-            }
+            }*/
 
             //Task.Run(UpdateTiles);
         }
@@ -116,7 +110,7 @@ namespace Lumos
 
             while (caveSize > 0)
             {
-                MapData[currentX, currentY] = MapTiles.empty;
+                MapData[currentX, currentY] = new Tile(MapTiles.empty, TileTextures.EmptyTexture, false, false);
 
                 // Move in a random direction
                 int direction = random.Next(4);
@@ -228,24 +222,24 @@ namespace Lumos
                     // Check if the tile position is within the map bounds
                     if (x >= 0 && x < Width && y >= 0 && y < Height)
                     {
-                        if (MapData[x, y] == MapTiles.dirtTop)
+                        if (MapData[x, y].MapTile == MapTiles.dirtTop)
                         {
                             if (y < Height)
                             {
-                                if (MapData[x, y + 1] != MapTiles.dirt)
+                                if (MapData[x, y + 1].MapTile != MapTiles.dirt)
                                 {
-                                    MapData[x, y] = MapTiles.empty;
+                                    MapData[x, y] = new Tile(MapTiles.empty, TileTextures.EmptyTexture, false, false);
                                 }
                             }
                         }
 
-                        if (MapData[x, y] == MapTiles.dirt)
+                        if (MapData[x, y].MapTile == MapTiles.dirt)
                         {
                             if (y > 0)
                             {
-                                if (MapData[x, y - 1] == MapTiles.empty)
+                                if (MapData[x, y - 1].MapTile == MapTiles.empty)
                                 {
-                                    MapData[x, y] = MapTiles.grassTop;
+                                    MapData[x, y] = new Tile(MapTiles.grassTop, TileTextures.GrassTop, false, false);
                                 }
                             }
                             Rectangle tileRect = new Rectangle(
@@ -253,7 +247,7 @@ namespace Lumos
                         (int)tilePosition.Y + y * tileHeight,
                         tileWidth,
                         tileHeight);
-                            spriteBatch.Draw(TileTextures.DirtTexture, tilePosition, Color.White);
+
                             var testRect = new Rectangle(x * tileWidth, y * tileHeight, tileWidth, tileHeight);
                             if (x >= minX && x <= maxX && y >= minY && y <= maxY)
                             {
@@ -264,21 +258,22 @@ namespace Lumos
                                 }
                             }
                         }
-                        else if (MapData[x, y] == MapTiles.dirtTop)
-                        {
+                        spriteBatch.Draw(MapData[x, y].Texture, tilePosition, Color.White);
+                        /*    else if (MapData[x, y].MapTile == MapTiles.dirtTop)
                             {
-                                spriteBatch.Draw(TileTextures.DirtTopTexture, tilePosition, Color.Red);
+                                {
+                                    spriteBatch.Draw(MapData[x, y].Texture, tilePosition, Color.Red);
+                                }
                             }
-                        }
-                        else if (MapData[x, y] == MapTiles.water)
-                        {
-                            spriteBatch.Draw(TileTextures.WaterTexture, tilePosition, waterColor);
-                        }
-                        else if (MapData[x, y] == MapTiles.grassTop)
+                            else if (MapData[x, y].MapTile == MapTiles.water)
+                            {
+                                spriteBatch.Draw(MapData[x, y].Texture, tilePosition, waterColor);
+                            }
+                            else if (MapData[x, y].MapTile == MapTiles.grassTop)
 
-                        {
-                            spriteBatch.Draw(TileTextures.GrassTop, tilePosition, Color.White);
-                        }
+                            {
+                                spriteBatch.Draw(TileTextures.GrassTop, tilePosition, Color.White);
+                            }*/
                         spriteBatch.Draw(_texture, player.HorizontalCollisionRect, Color.Blue * 0.5f);
                         spriteBatch.Draw(_texture, player.VerticalCollisionRect, Color.Green * 0.5f);
 
@@ -294,52 +289,51 @@ namespace Lumos
 
         public async Task UpdateTiles()
         {
-            HashSet<(int, int)> newlyCreatedWaterTiles = new HashSet<(int, int)>(); // Track newly created water tiles
+            HashSet<(int, int)> newlyCreatedWaterTiles = new HashSet<(int, int)>();
 
             for (int y = Height - 1; y >= 0; y--)
             {
                 for (int x = 0; x < Width; x++)
                 {
-                    if (MapData[x, y] == MapTiles.water)
+                    if (MapData[x, y].MapTile == MapTiles.water)
                     {
-                        // Apply water physics here
-                        if (y + 1 < Height && MapData[x, y + 1] == MapTiles.empty)
+                        if (y + 1 < Height && MapData[x, y + 1].MapTile == MapTiles.empty)
                         {
-                            newlyCreatedWaterTiles.Add((x, y + 1)); // Add newly created water tile to the set
+                            newlyCreatedWaterTiles.Add((x, y + 1));
                         }
-                        else if (y + 1 < Height && MapData[x, y + 1] == MapTiles.water)
+                        else if (y + 1 < Height && MapData[x, y + 1].MapTile == MapTiles.water)
                         {
-                            if (x + 1 < Width && MapData[x + 1, y] == MapTiles.empty && MapData[x + 1, y + 1] != MapTiles.water)
+                            if (x + 1 < Width && MapData[x + 1, y].MapTile == MapTiles.empty && MapData[x + 1, y + 1].MapTile != MapTiles.water)
                             {
-                                newlyCreatedWaterTiles.Add((x + 1, y)); // Add newly created water tile to the set
+                                newlyCreatedWaterTiles.Add((x + 1, y));
                             }
-                            if (x - 1 >= 0 && MapData[x - 1, y] == MapTiles.empty && MapData[x - 1, y + 1] != MapTiles.water)
+                            if (x - 1 >= 0 && MapData[x - 1, y].MapTile == MapTiles.empty && MapData[x - 1, y + 1].MapTile != MapTiles.water)
                             {
-                                newlyCreatedWaterTiles.Add((x - 1, y)); // Add newly created water tile to the set
+                                newlyCreatedWaterTiles.Add((x - 1, y));
                             }
                         }
                     }
 
-                    if (MapData[x, y] == MapTiles.dirtTop)
+                    if (MapData[x, y].MapTile == MapTiles.dirtTop)
                     {
-                        if (y - 1 >= 0 && MapData[x, y - 1] == MapTiles.empty)
+                        if (y - 1 >= 0 && MapData[x, y - 1].MapTile == MapTiles.empty)
                         {
-                            MapData[x, y - 1] = MapTiles.dirtTop;
+                            MapData[x, y - 1] = new Tile(MapTiles.dirtTop, TileTextures.DirtTexture, false, false);
                         }
                     }
                 }
             }
 
-            await Task.Delay(500); // Delay for 0.5 seconds
+            await Task.Delay(500);
 
             foreach ((int x, int y) in newlyCreatedWaterTiles)
             {
-                MapData[x, y] = MapTiles.water; // Update the map with newly created water tiles
+                MapData[x, y] = new Tile(MapTiles.water, TileTextures.WaterTexture, false, false);
             }
 
-            isUpdatingTiles = false; // Update is complete
+            isUpdatingTiles = false;
 
-            await Task.Delay(1);
+            await Task.Delay(50);
         }
     }
 }
