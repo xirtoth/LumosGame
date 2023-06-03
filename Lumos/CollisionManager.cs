@@ -189,8 +189,8 @@ namespace Lumos
 
         public static bool HandleCollision(Player player, Enemy enemy)
         {
-            Rectangle rect = new Rectangle((int)player.Pos.X - (int)Game1.Instance._cameraPosition.X, (int)player.Pos.Y - (int)Game1.Instance._cameraPosition.Y, 16, 16);
-            if (player.Rect.Intersects(enemy.Bounds))
+            Rectangle rect = new Rectangle((int)player.Rect.X - (int)Game1.Instance._cameraPosition.X, (int)player.Rect.Y - (int)Game1.Instance._cameraPosition.Y, player.Rect.Width, player.Rect.Height);
+            if (rect.Intersects(enemy.boundingBox))
             {
                 return true;
             }

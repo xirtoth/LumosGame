@@ -49,9 +49,9 @@ namespace Lumos
 
         private float animationFps = 0.5f;
 
-        private float animationSpeedIdle = 0.2f;
+        private float animationSpeedIdle = 2f;
 
-        private float animationSpeedWalk = 0.2f;
+        private float animationSpeedWalk = 4f;
 
         private int currentFrame;
 
@@ -85,16 +85,17 @@ namespace Lumos
             SpriteEffects flipEffect = (facingDirection == -1) ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
 
             // Draw the player texture with the appropriate flip effect
-            _sb.Draw(PlayerTextures[currentFrame], drawRectangle, null, Color.White, 0f, Vector2.Zero, flipEffect, 0f);
-
+            //_sb.Draw(PlayerTextures[currentFrame], drawRectangle, null, Color.White, 0f, Vector2.Zero, flipEffect, 0f);
+            animation.Draw(_sb, drawPosition, flipEffect);
             // _sb.Draw(PlayerTex, drawPosition, Color.White);
         }
 
         public void Update(GameTime gameTime)
         {
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
-            animation.PlayAnimation("idle");
+
             PreviousPos = Pos;
+            animation.Update(gameTime);
 
             //float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
@@ -134,6 +135,10 @@ namespace Lumos
                 // Handle player movement
                 if (pressedKeys.Contains(Keys.D))
                 {
+                    if (animation.CurrentAnimationName != "walk")
+                    {
+                        animation.PlayAnimation("walk");
+                    }
                     newPosition.X += MoveSpeed; // Move the player to the right
                     facingDirection = 1;
                     if (CollisionManager.HandleCollision(new Rectangle((int)newPosition.X, (int)newPosition.Y, Rect.Width, Rect.Height), out isOnGround))
@@ -145,6 +150,11 @@ namespace Lumos
                 else if (pressedKeys.Contains(Keys.A))
                 {
                     facingDirection = -1;
+                    if (animation.CurrentAnimationName != "walk")
+                    {
+                        // Play the "walk" animation
+                        animation.PlayAnimation("walk");
+                    }
                     newPosition.X -= MoveSpeed; // Move the player to the left
                     if (CollisionManager.HandleCollision(new Rectangle((int)newPosition.X, (int)newPosition.Y, Rect.Width, Rect.Height), out isOnGround))
                     {
@@ -160,9 +170,6 @@ namespace Lumos
                         newPosition.Y = Pos.Y - moveBackOffset; // Move player back by 1 unit in the opposite direction
                     }
                 }
-                else
-                {
-                }
 
                 // Apply gravity to the player when moving right or left
                 newPosition.Y += gravity;
@@ -171,13 +178,22 @@ namespace Lumos
                 if (CollisionManager.HandleCollision(new Rectangle((int)newPosition.X, (int)newPosition.Y, Rect.Width, Rect.Height), out isOnGround))
                 {
                     newPosition.Y = Pos.Y - moveBackOffset; // Move player back by 1 unit in the opposite direction
+                    IsOnGround = true;
+                }
+                if (pressedKeys.Contains(Keys.Space) && IsOnGround)
+                {
+                    newPosition.Y -= 20f;
                 }
             }
             else
             {
                 // No keys are pressed
                 // PlayerTextures = TileTextures.PlayerIdle;
-
+                if (animation.CurrentAnimationName != "idle")
+                {
+                    // Play the "idle" animation
+                    animation.PlayAnimation("idle");
+                }
                 // Apply gravity to the player
                 newPosition.Y += gravity;
 

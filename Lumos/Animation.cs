@@ -1,11 +1,14 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using MonoGame.Extended.Sprites;
+using MonoGame.Extended.Timers;
 
 public class Animation
 {
     private Dictionary<string, AnimationData> animations;
     private AnimationData currentAnimation;
+    public string CurrentAnimationName { get; private set; }
 
     public Animation()
     {
@@ -32,6 +35,7 @@ public class Animation
         {
             currentAnimation = animations[name];
             currentAnimation.Reset();
+            CurrentAnimationName = name;
         }
     }
 
@@ -60,6 +64,7 @@ public class Animation
         private float animationSpeed;
         private float frameDuration;
         private Texture2D[] frames;
+        private float frameTimer;
 
         public AnimationData(Texture2D[] frames, float animationSpeed)
         {
@@ -73,7 +78,22 @@ public class Animation
         public void Update(GameTime gameTime)
         {
             float elapsedSeconds = (float)gameTime.ElapsedGameTime.TotalSeconds;
-            currentFrameIndex = (currentFrameIndex + (int)(elapsedSeconds / frameDuration)) % frames.Length;
+            frameTimer += elapsedSeconds;
+
+            // Check if enough time has passed to move to the next frame
+            if (frameTimer >= frameDuration)
+            {
+                // Move to the next frame
+                currentFrameIndex++;
+                frameTimer = 0f;
+
+                // Check if animation has reached the end
+                if (currentFrameIndex >= frames.Length)
+                {
+                    // Reset animation back to the first frame
+                    currentFrameIndex = 0;
+                }
+            }
         }
 
         // Draw the current frame of the animation

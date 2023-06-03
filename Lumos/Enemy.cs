@@ -166,12 +166,12 @@ namespace Lumos
             {
                 spriteBatch.Draw(texture, position - cameraPos, null, Color.White, rotationAngle + 90, origin, 1.0f, SpriteEffects.None, 0);
             }
-            // DrawHealthText(spriteBatch, cameraPos);
+            DrawHealthText(spriteBatch, Position);
         }
 
         public void DrawHealthText(SpriteBatch spriteBatch, Vector2 cameraPos)
         {
-            spriteBatch.DrawString(TileTextures.MyFont, $"{health}/{maxHealth}", Position - cameraPos + new Vector2(-20, -texture.Height), Color.Red);
+            spriteBatch.DrawString(TileTextures.MyFont, $"{health}/{maxHealth}", Position + new Vector2(-20, -texture.Height), Color.Red);
         }
 
         private void SetNewDestination()
@@ -190,9 +190,10 @@ namespace Lumos
             }
             if (health < 0)
             {
-                //  game._enemies.Remove(this);
+                game._enemies.Remove(this);
             }
-            game._damageMessageList.Add(new DamageMessage(amount.ToString(), 2f, position, game));
+            game._damageMessageList.Add(new DamageMessage(amount.ToString(), 2f, Position, game));
+            game._player.Pos = new Vector2(game._player.Pos.X - 5f, game._player.Pos.Y);
         }
     }
 }

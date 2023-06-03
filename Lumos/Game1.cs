@@ -14,7 +14,7 @@ namespace Lumos
     {
         private GraphicsDeviceManager _graphics;
         public SpriteBatch _spriteBatch;
-        private Player _player;
+        public Player _player;
         public SpriteFont _myFont;
         private readonly Random rand = new Random();
         public Map _map;
@@ -208,7 +208,7 @@ namespace Lumos
                 if (tileX >= 0 && tileX < _map.Width && tileY >= 0 && tileY < _map.Height)
                 {
                     // Change the tile at the clicked position
-                    _map.MapData[tileX, tileY] = new Tile(MapTiles.dirt, TileTextures.DirtTexture, false, false);
+                    _map.MapData[tileX, tileY] = new Tile(MapTiles.dirt, TileTextures.DirtTexture, true, false);
                 }
             }
             if (mouseState.MiddleButton == ButtonState.Pressed)
