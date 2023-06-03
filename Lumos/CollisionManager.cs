@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using System.Text;
 using System.Threading.Tasks;
 
@@ -120,36 +121,80 @@ namespace Lumos
               }
           }*/
 
-        public static void HandleCollision(Player player, Rectangle tileRect)
+        /*   public static bool HandleCollision(Rectangle rect)
+           {
+               int minX = Math.Max(0, (int)(rect.X / 16) - 1);
+               int minY = Math.Max(0, (int)(rect.Y / 16) - 1);
+               int maxX = Math.Min(Game1.Instance._map.Width - 1, (int)((rect.X + rect.Width) / 16) + 1);
+               int maxY = Math.Min(Game1.Instance._map.Height, (int)((rect.Y + rect.Height) / 16) + 1);
+
+               for (int x = minX; x <= maxX; x++)
+               {
+                   for (int y = minY; y <= maxY; y++)
+                   {
+                       Rectangle tileRect = new Rectangle(x * 16, y * 16, 16, 16);
+                       if (Game1.Instance._map.MapData[x, y] != null && Game1.Instance._map.MapData[x, y].Collision && rect.Intersects(tileRect))
+                       {
+                           return true;
+                       }
+                   }
+               }
+               return false;
+           }*/
+
+        public static bool HandleCollision(Rectangle rect, out bool isOnGround)
         {
-            Rectangle playerBounds = player.Rect;
-            Vector2 depth = RectangleExtensions.GetIntersectionDepth(playerBounds, tileRect);
+            int minX = Math.Max(0, (int)(rect.X / 16) - 1);
+            int minY = Math.Max(0, (int)(rect.Y / 16) - 1);
+            int maxX = Math.Min(Game1.Instance._map.Width - 1, (int)((rect.X + rect.Width) / 16) + 1);
+            int maxY = Math.Min(Game1.Instance._map.Height, (int)((rect.Y + rect.Height) / 16) + 1);
 
-            if (depth != Vector2.Zero)
+            bool collisionDetected = false;
+            bool groundDetected = false;
+
+            for (int x = minX; x <= maxX; x++)
             {
-                // Resolve the collision along the shallow axis (Y axis in this case).
-                if (Math.Abs(depth.Y) < Math.Abs(depth.X))
+                for (int y = minY; y <= maxY; y++)
                 {
-                    // If the player crossed the top of the tile, they are on the ground.
-                    if (player.previousBottom <= tileRect.Top)
+                    Rectangle tileRect = new Rectangle(x * 16, y * 16, 16, 16);
+                    if (Game1.Instance._map.MapData[x, y] != null && Game1.Instance._map.MapData[x, y].Collision && rect.Intersects(tileRect))
                     {
-                        player.IsOnGround = true;
+                        collisionDetected = true;
+
+                        Vector2 depth = RectangleExtensions.GetIntersectionDepth(rect, tileRect);
+
+                        if (depth != Vector2.Zero)
+                        {
+                            if (Math.Abs(depth.Y) < Math.Abs(depth.X))
+                            {
+                                if (rect.Bottom <= tileRect.Top)
+                                {
+                                    groundDetected = true;
+                                }
+
+                                rect.Y += (int)depth.Y;
+                            }
+                            else
+                            {
+                                rect.X += (int)depth.X;
+                            }
+                        }
                     }
-
-                    // Resolve the collision along the Y axis.
-                    player.Pos += new Vector2(0, depth.Y) + new Vector2(0, 1);
-
-                    // Perform further collisions with the updated player bounds.
-                    playerBounds = player.Rect;
-                }
-                else // Resolve the collision along the X axis.
-                {
-                    player.Pos += new Vector2(depth.X, 0);
-
-                    // Perform further collisions with the updated player bounds.
-                    playerBounds = player.Rect;
                 }
             }
+
+            isOnGround = groundDetected;
+            return collisionDetected;
+        }
+
+        public static bool HandleCollision(Player player, Enemy enemy)
+        {
+            Rectangle rect = new Rectangle((int)player.Pos.X - (int)Game1.Instance._cameraPosition.X, (int)player.Pos.Y - (int)Game1.Instance._cameraPosition.Y, 16, 16);
+            if (player.Rect.Intersects(enemy.Bounds))
+            {
+                return true;
+            }
+            return false;
         }
     }
 }

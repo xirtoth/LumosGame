@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGame.Extended.Timers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,10 +18,27 @@ namespace Lumos
         private Vector2 velocity;
         private Vector2 origin;
         public Vector2 Destination { get; set; }
-        public float MovementSpeed { get; set; } = 2f;
+        public float MovementSpeed { get; set; } = 10f;
         public Rectangle boundingBox { get; set; } = Rectangle.Empty;
 
-        public Vector2 Position { get; set; }
+        private Vector2 previousPosition;
+
+        private Vector2 Position;
+
+        public float animatonFps = 1f / 8;
+
+        public Texture2D[] Textures { get; set; }
+
+        public bool Animated { get; set; }
+
+        private float animationTime = 0f;
+
+        private int currentFrame;
+
+        private bool Moving = false;
+        private float movementTime = 1f;
+
+        private Random rand = new Random();
 
         public Enemy(Texture2D texture, Vector2 position) : base(texture, position)
         {
@@ -28,41 +46,107 @@ namespace Lumos
             maxHealth = 100;
             boundingBox = new Rectangle((int)position.X, (int)position.Y, texture.Width, texture.Height);
             Destination = position;
+            Animated = false;
         }
 
-        public override void Update(GameTime gameTime, Vector2 cameraPos, Player player)
+        public Enemy(Texture2D[] textures, Vector2 position) : base(textures[0], position)
+        {
+            health = 100;
+            maxHealth = 100;
+            boundingBox = new Rectangle((int)position.X, (int)position.Y, textures[0].Width, textures[0].Height);
+            Destination = position;
+            Textures = textures;
+            Animated = true;
+            Position = position;
+        }
+
+        private void CheckCollision(Tile[,] map, Vector2 cameraPos)
+        {
+            int minX = Math.Max(0, (int)(boundingBox.Left / 16) - 1);
+            int minY = Math.Max(0, (int)(boundingBox.Top / 16) - 1);
+            int maxX = Math.Min(texture.Width - 1, (int)(boundingBox.Right / 16) + 1);
+            int maxY = Math.Min(texture.Height - 1, (int)(boundingBox.Bottom / 16) + 1);
+
+            for (int x = minX; x <= maxX; x++)
+            {
+                for (int y = minY; y <= maxY; y++)
+                {
+                    Rectangle tileRect = new Rectangle(x * 16, y * 16, 16, 16);
+
+                    if (boundingBox.Intersects(tileRect))
+                    {
+                        // Handle collision with the tile
+                        if (map[x, y].Collision)
+                        {
+                            // Position = new Vector2(-10, -10);
+                            // Reset the enemy's position to their previous position
+                            Position = previousPosition;
+                        }
+                        else if (map[x, y].MapTile == MapTiles.water)
+                        {
+                            // Example: Handle collision with water tile
+                            // Do something when enemy collides with water
+                        }
+                        // Add more collision handling for other tile types if needed
+                    }
+                }
+            }
+            boundingBox = new Rectangle((int)(Position.X - cameraPos.X), (int)(Position.Y - cameraPos.Y), texture.Width, texture.Height);
+        }
+
+        public override void Update(GameTime gameTime, Vector2 cameraPos, Player player, Game1 game)
         {
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            Vector2 direction = Destination - position;
+            //Position = new Vector2(Position.X, Position.Y + 0.1f);
+            CheckCollision(game._map.MapData, cameraPos);
+
+            if (Moving)
+            {
+                float distanceToMove = MovementSpeed * deltaTime;
+                previousPosition = Position;
+                Position = new Vector2(Position.X - distanceToMove, Position.Y);
+                CheckCollision(game._map.MapData, cameraPos);
+                Textures = TileTextures.Enemy1Walk;
+            }
+
+            if (elapsedTime > movementTime)
+            {
+                Moving = !Moving;
+                Textures = TileTextures.Enemy1Animated;
+                CheckCollision(game._map.MapData, cameraPos);
+                elapsedTime = 0;
+                movementTime = rand.Next(1, 5);
+            }
+
+            if (Animated)
+            {
+                animationTime += deltaTime;
+                if (animationTime > animatonFps)
+                {
+                    currentFrame = (currentFrame + 1) % Textures.Length;
+                    animationTime = 0f;
+                }
+            }
+
             elapsedTime += deltaTime;
 
-            // Calculate the distance to move based on the elapsed time and movement speed
-            float distanceToMove = MovementSpeed * deltaTime;
-            Vector2 direction = Destination - position;
-            if (elapsedTime > 0.01f)
-            {
-                position += direction * distanceToMove;
-                elapsedTime = 0;
-            }
-            else
-            {
-                velocity.Y = 0;
-            }
-
             //position += velocity;
-            boundingBox = new Rectangle((int)(position.X - cameraPos.X), (int)(position.Y - cameraPos.Y), texture.Width, texture.Height);
+            boundingBox = new Rectangle((int)(Position.X - cameraPos.X), (int)(Position.Y - cameraPos.Y), texture.Width, texture.Height);
             // Vector2 direction = Destination - position;
-            if (Vector2.Distance(position, Destination) < 50f)
-            {
-                // Set a new random destination
-                SetNewDestination();
-            }
+            /* if (Vector2.Distance(position, Destination) < 50f)
+              {
+                  // Set a new random destination
+                  SetNewDestination();
+              } */
 
             // Calculate the rotation angle in radians
             rotationAngle = (float)Math.Atan2(direction.Y, direction.X);
 
             // Calculate the origin point for rotation (assuming the center of the texture)
             origin = new Vector2(texture.Width / 2, texture.Height / 2);
-            base.Update(gameTime, cameraPos, player);
+            base.Update(gameTime, cameraPos, player, game);
         }
 
         public bool IsVisible(Game1 game)
@@ -74,20 +158,27 @@ namespace Lumos
 
         public override void Draw(SpriteBatch spriteBatch, Vector2 cameraPos)
         {
-            spriteBatch.Draw(texture, position - cameraPos, null, Color.White, rotationAngle + 90, origin, 1.0f, SpriteEffects.None, 0);
-            DrawHealthText(spriteBatch, cameraPos);
+            if (Animated)
+            {
+                spriteBatch.Draw(Textures[currentFrame], Position - cameraPos, null, Color.White);
+            }
+            else
+            {
+                spriteBatch.Draw(texture, position - cameraPos, null, Color.White, rotationAngle + 90, origin, 1.0f, SpriteEffects.None, 0);
+            }
+            // DrawHealthText(spriteBatch, cameraPos);
         }
 
         public void DrawHealthText(SpriteBatch spriteBatch, Vector2 cameraPos)
         {
-            spriteBatch.DrawString(TileTextures.MyFont, $"{health}/{maxHealth}", position - cameraPos + new Vector2(-20, -texture.Height), Color.Red);
+            spriteBatch.DrawString(TileTextures.MyFont, $"{health}/{maxHealth}", Position - cameraPos + new Vector2(-20, -texture.Height), Color.Red);
         }
 
         private void SetNewDestination()
         {
             // Set a new random destination within a certain range
             Random random = new Random();
-            int range = 100; // Adjust the range as needed
+            int range = 300; // Adjust the range as needed
             Destination = position + new Vector2(random.Next(-range, range), random.Next(-range, range));
         }
 
@@ -99,7 +190,7 @@ namespace Lumos
             }
             if (health < 0)
             {
-                game._enemies.Remove(this);
+                //  game._enemies.Remove(this);
             }
             game._damageMessageList.Add(new DamageMessage(amount.ToString(), 2f, position, game));
         }

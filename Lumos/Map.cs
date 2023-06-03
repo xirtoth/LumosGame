@@ -104,6 +104,12 @@ namespace Lumos
             //Task.Run(UpdateTiles);
         }
 
+        /// <summary>
+        /// modifies map to have random caves
+        /// </summary>
+        /// <param name="startX">Start position x</param>
+        /// <param name="startY">Start position y</param>
+        /// <param name="caveSize">Size of cave</param>
         private void RandomWalk(int startX, int startY, int caveSize)
         {
             int currentX = startX;
@@ -151,36 +157,36 @@ namespace Lumos
                 isUpdatingTiles = true;
                 Task.Run(() => UpdateTiles());
             }
-            int minX = Math.Max(0, (int)(player.Pos.X / tileWidth) - 1);
-            int minY = Math.Max(0, (int)(player.Pos.Y / tileHeight) - 1);
-            int maxX = Math.Min(Width - 1, (int)((player.Pos.X + player.Rect.Width) / tileWidth) + 1);
-            int maxY = Math.Min(Height - 1, (int)((player.Pos.Y + player.Rect.Height) / tileHeight) + 1);
-            Rectangle playerRect = player.Rect;
+            /*   int minX = Math.Max(0, (int)(player.Pos.X / tileWidth) - 1);
+               int minY = Math.Max(0, (int)(player.Pos.Y / tileHeight) - 1);
+               int maxX = Math.Min(Width - 1, (int)((player.Pos.X + player.Rect.Width) / tileWidth) + 1);
+               int maxY = Math.Min(Height - 1, (int)((player.Pos.Y + player.Rect.Height) / tileHeight) + 1);
+               Rectangle playerRect = player.Rect;
 
-            for (int x = minX; x <= maxX; x++)
-            {
-                for (int y = minY; y <= maxY; y++)
-                {
-                    Rectangle tileRect = new Rectangle(x * tileWidth, y * tileHeight, tileWidth, tileHeight);
+               for (int x = minX; x <= maxX; x++)
+               {
+                   for (int y = minY; y <= maxY; y++)
+                   {
+                       Rectangle tileRect = new Rectangle(x * tileWidth, y * tileHeight, tileWidth, tileHeight);
 
-                    if (playerRect.Intersects(tileRect))
-                    {
-                        // Handle collision with the tile
-                        if (MapData[x, y].Collision == true)
-                        {
-                            // Example: Prevent player from passing through the dirt tile
-                            // Reset the player's position to their previous position
-                            player.Pos = player.PreviousPos;
-                        }
-                        else if (MapData[x, y].MapTile == MapTiles.water)
-                        {
-                            // Example: Handle collision with water tile
-                            // Do something when player collides with water
-                        }
-                        // Add more collision handling for other tile types if needed
-                    }
-                }
-            }
+                       if (playerRect.Intersects(tileRect))
+                       {
+                           // Handle collision with the tile
+                           if (MapData[x, y].Collision == true)
+                           {
+                               // Example: Prevent player from passing through the dirt tile
+                               // Reset the player's position to their previous position
+                               player.Pos = player.PreviousPos;
+                           }
+                           else if (MapData[x, y].MapTile == MapTiles.water)
+                           {
+                               // Example: Handle collision with water tile
+                               // Do something when player collides with water
+                           }
+                           // Add more collision handling for other tile types if needed
+                       }
+                   }
+               } */
         }
 
         public void DrawMap(SpriteBatch spriteBatch, Player player, Microsoft.Xna.Framework.Vector2 cameraPos, Viewport viewport, GraphicsDevice gd, GameTime gameTime)

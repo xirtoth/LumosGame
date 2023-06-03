@@ -17,7 +17,7 @@ namespace Lumos
         private Player _player;
         public SpriteFont _myFont;
         private readonly Random rand = new Random();
-        private Map _map;
+        public Map _map;
         public Vector2 _cameraPosition;
         private MouseState _previousMouseState;
         private int MapSizeX = 2000;
@@ -41,6 +41,10 @@ namespace Lumos
         private bool _reverseColors = false;
         private Color _lerpedColor;
         private bool _wasMousePressed = false;
+        private Effect _effect;
+        private RenderTarget2D lightingRenderTarget;
+
+        public static Game1 Instance { get; set; }
 
         public Game1()
         {
@@ -56,23 +60,23 @@ namespace Lumos
             _graphics.IsFullScreen = false;
             //_graphics.SynchronizeWithVerticalRetrace = false;
             _graphics.ApplyChanges();// TODO: Add your initialization logic here
-
+            Instance = this;
             base.Initialize();
         }
 
         protected override void LoadContent()
         {
+            TileTextures.LoadContent(Content);
             _damageMessageList = new List<DamageMessage>();
             _enemies = new List<Enemy>();
             _spriteBatch = new SpriteBatch(GraphicsDevice);
-            _player = new Player(new Vector2(100 * 16, 100 * 16), "Henkka", Content.Load<Texture2D>("player"));
+            _player = new Player(new Vector2(200, -40), "Henkka", Content.Load<Texture2D>("player_00"));
             _myFont = Content.Load<SpriteFont>("MyFont");
-            TileTextures.WaterTexture = Content.Load<Texture2D>("water");
-            TileTextures.DirtTexture = Content.Load<Texture2D>("dirt");
-            TileTextures.DirtTopTexture = Content.Load<Texture2D>("dirttop");
-            TileTextures.EmptyTexture = Content.Load<Texture2D>("empty");
-            TileTextures.GrassTop = Content.Load<Texture2D>("grasstop");
-            TileTextures.MyFont = Content.Load<SpriteFont>("MyFont");
+
+            //Effect shaderEffect = Content.Load<Effect>("torchshader");
+            //TorchShader torchShader = new TorchShader(shaderEffect);
+            _effect = Content.Load<Effect>("torchshader");
+            lightingRenderTarget = new RenderTarget2D(GraphicsDevice, 64, 64);
             _arrow = Content.Load<Texture2D>("arrow");
             _enemyTex = Content.Load<Texture2D>("Spaceship1");
             _bg = Content.Load<Texture2D>("bgmountain");
@@ -82,19 +86,9 @@ namespace Lumos
             _toolRectangles = GenerateRectangles(10, 50, 50, 20);
             _damageMessageList.Add(new DamageMessage("testi", 5f, new Vector2(10, 10), this));
             _damageMessageList.Add(new DamageMessage("testi2", 5f, new Vector2(20, 20), this));
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 100; i++)
             {
-                int k = rand.Next(0, 3);
-                if (k == 0)
-                    _enemies.Add(new Enemy(_enemyTex, new Vector2(10, 10)));
-                else if (k == 1)
-                {
-                    _enemies.Add(new Enemy(TileTextures.DirtTexture, new Vector2(10, 10)));
-                }
-                else if (k == 2)
-                {
-                    _enemies.Add(new Enemy(TileTextures.WaterTexture, new Vector2(10, 10)));
-                }
+                _enemies.Add(new Enemy(TileTextures.Enemy1Walk, new Vector2(i * 32, -25)));
             }
 
             // TODO: use this.Content to load your game content here
@@ -147,9 +141,11 @@ namespace Lumos
                 foreach (Enemy e in _enemies)
                 {
                     // if (e.IsVisible(this))
-                    e.Update(gameTime, _cameraPosition, _player);
+                    e.Update(gameTime, _cameraPosition, _player, this);
                 }
 
+                Vector2 screenCenter = new Vector2(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
+                _cameraPosition = _player.Pos - screenCenter;
                 base.Update(gameTime);
             }
         }
@@ -238,6 +234,7 @@ namespace Lumos
                 panDirection.Y = EdgePanSpeed;
 
             _cameraPosition += panDirection * panSpeed;
+            // _cameraPosition = _enemies[0].Position;
             return mouseState;
         }
 
@@ -274,8 +271,15 @@ namespace Lumos
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(_lerpedColor);
+
+            //GraphicsDevice.SetRenderTarget(lightingRenderTarget);
+            //GraphicsDevice.Clear(Color.Black);
+
+            // Apply the lighting shader
+
             _spriteBatch.Begin();
             _spriteBatch.Draw(_bg, new Vector2(0, -1000), Color.White);
+
             foreach (Enemy e in _enemies)
             {
                 //   if (e.IsVisible(this))
