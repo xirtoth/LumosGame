@@ -296,5 +296,15 @@ namespace Lumos
             isOnGround = groundDetected;
             return collisionDetected;
         }
+
+        public static bool HandleCollision(Rectangle rect, Enemy enemy)
+        {
+            // Rectangle rect = new Rectangle((int)proj.Rect.X - (int)Game1.Instance._cameraPosition.X, (int)proj.Rect.Y - (int)Game1.Instance._cameraPosition.Y, proj.Rect.Width, proj.Rect.Height);
+            if (rect.Intersects(enemy.boundingBox))
+            {
+                return true;
+            }
+            return false;
+        }
     }
 }

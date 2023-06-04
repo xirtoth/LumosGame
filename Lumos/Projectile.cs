@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Penumbra;
+using System.Collections.Generic;
 
 namespace Lumos
 {
@@ -10,16 +11,16 @@ namespace Lumos
         private readonly Texture2D texture;
         public Vector2 Position { get; private set; }
         public float aliveTime = 0f;
-        public float maxAliveTime = 2f;
+        public float MaxAliveTime = 2f;
         private readonly Vector2 direction;
 
         public Light light = new PointLight
         {
-            Scale = new Vector2(200f), // Range of the light source (how far the light will travel)
-            ShadowType = ShadowType.Solid // Will not lit hulls themselves
+            Scale = new Vector2(20f),
+            ShadowType = ShadowType.Solid
         };
 
-        public Projectile(Vector2 position, Vector2 direction, Texture2D texture)
+        public Projectile(float maxAliveTime, Vector2 position, Vector2 direction, Texture2D texture)
         {
             Position = position;
             this.direction = direction;
@@ -27,6 +28,7 @@ namespace Lumos
             Game1.Instance.penumbra.Lights.Add(light);
             light.Position = Position;
             light.Color = Color.BlueViolet;
+            MaxAliveTime = maxAliveTime;
         }
 
         public void Update(GameTime gametime)
@@ -35,10 +37,23 @@ namespace Lumos
             float deltaTime = (float)gametime.ElapsedGameTime.TotalSeconds;
             aliveTime += deltaTime;
             Position += direction * Speed;
-            if (aliveTime > maxAliveTime)
+            if (aliveTime > MaxAliveTime)
             {
                 Game1.Instance.penumbra.Lights.Remove(light);
+
                 Game1.Instance._projectiles.Remove(this);
+            }
+            Rectangle collisionRect = new Rectangle((int)Position.X, (int)Position.Y, texture.Width, texture.Height);
+            List<Enemy> enemiesCopy = new List<Enemy>(Game1.Instance._enemies);
+            foreach (Enemy e in enemiesCopy)
+            {
+                if (CollisionManager.HandleCollision(collisionRect, e))
+                {
+                    e.TakeDamage(100, Game1.Instance);
+                    Game1.Instance.penumbra.Lights.Remove(light);
+
+                    Game1.Instance._projectiles.Remove(this);
+                }
             }
         }
 

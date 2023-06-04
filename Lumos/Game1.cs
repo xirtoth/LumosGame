@@ -70,7 +70,7 @@ namespace Lumos
             IsMouseVisible = true;
             penumbra = new PenumbraComponent(this);
             Components.Add(penumbra);
-            penumbra.Lights.Add(light);
+            //penumbra.Lights.Add(light);
             penumbra.Lights.Add(light2);
         }
 
@@ -113,7 +113,7 @@ namespace Lumos
             _map.GenerateMap();
             _toolRectangles = GenerateRectangles(10, 50, 50, 20);
 
-            for (int i = 0; i < 20; i++)
+            for (int i = 0; i < 200; i++)
             {
                 _enemies.Add(new Enemy(TileTextures.Enemy1Walk, new Vector2(i * 50, -200)));
             }
@@ -234,6 +234,7 @@ namespace Lumos
                     if (!_wasMousePressed)
                     {
                         _damageMessageList.Add(new DamageMessage("Removed " + _map.MapData[tileX, tileY].MapTile.ToString() + " at position " + tileX + "," + tileY, 5f, mousePosition + new Vector2(20, -20), this));
+                        _items.Add(new Item(_map.MapData[tileX, tileY].MapTile.ToString(), "testi", _map.MapData[tileX, tileY].Texture, new Vector2(tileX * 16, tileY * 16)));
                         _map.MapData[tileX, tileY] = new Tile(MapTiles.empty, TileTextures.EmptyTexture, false, false);
                     }
                 }

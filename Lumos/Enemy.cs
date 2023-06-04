@@ -210,7 +210,7 @@ namespace Lumos
             {
                 health -= amount;
             }
-            if (health < 0)
+            if (health <= 0)
             {
                 int lootAmount = rand.Next(1, 5);
 
@@ -228,7 +228,7 @@ namespace Lumos
                 }
                 game._enemies.Remove(this);
             }
-            game._damageMessageList.Add(new DamageMessage(amount.ToString(), 2f, Position, game));
+            game._damageMessageList.Add(new DamageMessage(amount.ToString() + $" {health} health left", 2f, Position, game));
             // game._player.Pos = new Vector2(game._player.Pos.X - 5f, game._player.Pos.Y);
         }
     }

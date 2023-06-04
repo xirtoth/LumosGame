@@ -152,11 +152,11 @@ namespace Lumos
 
         public void Update(Player player)
         {
-            if (!isUpdatingTiles)
-            {
-                isUpdatingTiles = true;
-                Task.Run(() => UpdateTiles());
-            }
+            /*   if (!isUpdatingTiles)
+               {
+                   isUpdatingTiles = true;
+                   Task.Run(() => UpdateTiles());
+               }*/
             /*   int minX = Math.Max(0, (int)(player.Pos.X / tileWidth) - 1);
                int minY = Math.Max(0, (int)(player.Pos.Y / tileHeight) - 1);
                int maxX = Math.Min(Width - 1, (int)((player.Pos.X + player.Rect.Width) / tileWidth) + 1);
@@ -261,15 +261,15 @@ namespace Lumos
                         tileWidth,
                         tileHeight);
 
-                            var testRect = new Rectangle(x * tileWidth, y * tileHeight, tileWidth, tileHeight);
-                            if (x >= minX && x <= maxX && y >= minY && y <= maxY)
-                            {
-                                if (player.Rect.Intersects(testRect))
-                                {
-                                    spriteBatch.Draw(_texture, new Rectangle((int)tilePosition.X, (int)tilePosition.Y, tileWidth, tileHeight), Color.White);
-                                    // CollisionManager.HandleCollision(player, testRect);
-                                }
-                            }
+                            /* var testRect = new Rectangle(x * tileWidth, y * tileHeight, tileWidth, tileHeight);
+                             if (x >= minX && x <= maxX && y >= minY && y <= maxY)
+                             {
+                                 if (player.Rect.Intersects(testRect))
+                                 {
+                                     spriteBatch.Draw(_texture, new Rectangle((int)tilePosition.X, (int)tilePosition.Y, tileWidth, tileHeight), Color.White);
+                                     // CollisionManager.HandleCollision(player, testRect);
+                                 }
+                             }*/
                         }
                         spriteBatch.Draw(MapData[x, y].Texture, tilePosition, Color.White);
                         /*    else if (MapData[x, y].MapTile == MapTiles.dirtTop)
@@ -287,8 +287,8 @@ namespace Lumos
                             {
                                 spriteBatch.Draw(TileTextures.GrassTop, tilePosition, Color.White);
                             }*/
-                        spriteBatch.Draw(_texture, player.HorizontalCollisionRect, Color.Blue * 0.5f);
-                        spriteBatch.Draw(_texture, player.VerticalCollisionRect, Color.Green * 0.5f);
+                        //  spriteBatch.Draw(_texture, player.HorizontalCollisionRect, Color.Blue * 0.5f);
+                        //  spriteBatch.Draw(_texture, player.VerticalCollisionRect, Color.Green * 0.5f);
 
                         // Draw player's rays for debugging
                         /*  foreach (var ray in player.Rays)

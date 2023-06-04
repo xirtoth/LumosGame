@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Penumbra;
 
 namespace Lumos
 {
@@ -20,6 +21,12 @@ namespace Lumos
 
         public int Count { get; set; } = 1;
 
+        public Light light = new PointLight
+        {
+            Scale = new Vector2(16f),
+            ShadowType = ShadowType.Solid
+        };
+
         public Item(string name, string description, Texture2D texture, Vector2 position)
         {
             Name = name;
@@ -27,22 +34,35 @@ namespace Lumos
             Icon = texture;
             Texture = texture;
             Position = position;
+            light.Color = Color.OrangeRed;
+            light.Intensity = 1f;
+            Game1.Instance.penumbra.Lights.Add(light);
             //Rect = new Rectangle((int)Position.X, (int)Position.Y, Texture.Width, Texture.Height);
         }
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(Texture, Position - Game1.Instance._cameraPosition, Color.White);
+            float scale = 0.5f; // Scale factor for 50% scaling
+
+            // Calculate the scaled position
+            Vector2 scaledPosition = Position - Game1.Instance._cameraPosition;
+
+            // Calculate the scaled size
+            Vector2 scaledSize = new Vector2(Texture.Width, Texture.Height) * scale;
+
+            spriteBatch.Draw(Texture, scaledPosition, null, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
         }
 
         public void Update(GameTime gameTime)
         {
             bool isGrounded;
 
+            light.Position = Position - Game1.Instance._cameraPosition;
+
             if (shouldUpdatePosition)
             {
                 // Rect = new Rectangle((int)(Position.X - (int)Game1.Instance._cameraPosition.X), (int)(Position.Y - (int)Game1.Instance._cameraPosition.Y), Texture.Width, Texture.Height);
-                Rect = new Rectangle((int)Position.X, (int)Position.Y, Texture.Width, Texture.Height);
+                Rect = new Rectangle((int)Position.X, (int)Position.Y, Texture.Width / 2, Texture.Height / 2);
                 if (CollisionManager.HandleCollision(this, out isGrounded))
                 {
                     Position = new Vector2(Position.X, Position.Y - 0.1f);
@@ -59,7 +79,7 @@ namespace Lumos
             {
                 Game1.Instance._player.Inventory.AddItem(this);
                 Game1.Instance._damageMessageList.Add(new DamageMessage($"Collected {this.Name}", 3, Position + new Vector2(0, -20), Game1.Instance));
-
+                Game1.Instance.penumbra.Lights.Remove(light);
                 Game1.Instance._items.Remove(this);
             }
         }
