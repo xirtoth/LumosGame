@@ -21,6 +21,8 @@ namespace Lumos
         public float MovementSpeed { get; set; } = 10f;
         public Rectangle boundingBox { get; set; } = Rectangle.Empty;
 
+        public Rectangle CollisionRect { get; set; }
+
         private Vector2 previousPosition;
 
         private Vector2 Position;
@@ -96,18 +98,35 @@ namespace Lumos
 
         public override void Update(GameTime gameTime, Vector2 cameraPos, Player player, Game1 game)
         {
+            boundingBox = new Rectangle((int)(Position.X - cameraPos.X), (int)(Position.Y - cameraPos.Y), texture.Width, texture.Height);
+            CollisionRect = new Rectangle((int)Position.X, (int)Position.Y, Textures[currentFrame].Width, Textures[currentFrame].Height);
+            previousPosition = Position;
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
-
+            float gravity = 2f;
+            bool isOnGround;
             Vector2 direction = Destination - position;
             //Position = new Vector2(Position.X, Position.Y + 0.1f);
-            CheckCollision(game._map.MapData, cameraPos);
-
+            //  CheckCollision(game._map.MapData, cameraPos);
+            Position = new Vector2(Position.X, Position.Y + gravity);
+            if (CollisionManager.HandleCollision(CollisionRect, out isOnGround))
+            {
+                Position = previousPosition;
+                isOnGround = true;
+                CollisionRect = new Rectangle((int)Position.X, (int)Position.Y, Textures[currentFrame].Width, Textures[currentFrame].Height);
+                boundingBox = new Rectangle((int)(Position.X - cameraPos.X), (int)(Position.Y - cameraPos.Y), texture.Width, texture.Height);
+            }
             if (Moving)
             {
                 float distanceToMove = MovementSpeed * deltaTime;
                 previousPosition = Position;
-                Position = new Vector2(Position.X - distanceToMove, Position.Y);
-                CheckCollision(game._map.MapData, cameraPos);
+                if (isOnGround)
+                {
+                    Position = new Vector2(Position.X - distanceToMove, Position.Y);
+                    CollisionRect = new Rectangle((int)Position.X, (int)Position.Y, Textures[currentFrame].Width, Textures[currentFrame].Height);
+                    boundingBox = new Rectangle((int)(Position.X - cameraPos.X), (int)(Position.Y - cameraPos.Y), texture.Width, texture.Height);
+                }
+
+                // CheckCollision(game._map.MapData, cameraPos);
                 Textures = TileTextures.Enemy1Walk;
             }
 
@@ -115,7 +134,7 @@ namespace Lumos
             {
                 Moving = !Moving;
                 Textures = TileTextures.Enemy1Animated;
-                CheckCollision(game._map.MapData, cameraPos);
+                //  CheckCollision(game._map.MapData, cameraPos);
                 elapsedTime = 0;
                 movementTime = rand.Next(1, 5);
             }
@@ -133,7 +152,7 @@ namespace Lumos
             elapsedTime += deltaTime;
 
             //position += velocity;
-            boundingBox = new Rectangle((int)(Position.X - cameraPos.X), (int)(Position.Y - cameraPos.Y), texture.Width, texture.Height);
+
             // Vector2 direction = Destination - position;
             /* if (Vector2.Distance(position, Destination) < 50f)
               {
@@ -146,7 +165,6 @@ namespace Lumos
 
             // Calculate the origin point for rotation (assuming the center of the texture)
             origin = new Vector2(texture.Width / 2, texture.Height / 2);
-            base.Update(gameTime, cameraPos, player, game);
         }
 
         public bool IsVisible(Game1 game)
@@ -156,16 +174,20 @@ namespace Lumos
             return boundingBox.Intersects(screenBounds);
         }
 
-        public override void Draw(SpriteBatch spriteBatch, Vector2 cameraPos)
+        public override void Draw(SpriteBatch spriteBatch, Vector2 cameraPos, GameTime gameTime)
         {
             if (Animated)
+
             {
-                spriteBatch.Draw(Textures[currentFrame], Position - cameraPos, null, Color.White);
+                // Game1.Instance.penumbra.BeginDraw();
+                Color color2 = new Color(Color.White.R, Color.White.G, Color.White.B, (byte)128);
+                spriteBatch.Draw(Textures[currentFrame], Position - cameraPos, null, color2);
             }
             else
             {
                 spriteBatch.Draw(texture, position - cameraPos, null, Color.White, rotationAngle + 90, origin, 1.0f, SpriteEffects.None, 0);
             }
+            // Game1.Instance.penumbra.Draw(gameTime);
             DrawHealthText(spriteBatch, Position);
         }
 

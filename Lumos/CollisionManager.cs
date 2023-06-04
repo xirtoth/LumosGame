@@ -147,7 +147,7 @@ namespace Lumos
             int minX = Math.Max(0, (int)(rect.X / 16) - 1);
             int minY = Math.Max(0, (int)(rect.Y / 16) - 1);
             int maxX = Math.Min(Game1.Instance._map.Width - 1, (int)((rect.X + rect.Width) / 16) + 1);
-            int maxY = Math.Min(Game1.Instance._map.Height, (int)((rect.Y + rect.Height) / 16) + 1);
+            int maxY = Math.Min(Game1.Instance._map.Height - 1, (int)((rect.Y + rect.Height) / 16) + 1);
 
             bool collisionDetected = false;
             bool groundDetected = false;
@@ -242,6 +242,51 @@ namespace Lumos
                             else
                             {
                                 item.Rect = new Rectangle((int)item.Rect.X, (int)item.Rect.Y + (int)depth.Y, item.Texture.Width, item.Texture.Width);
+                            }
+                        }
+                    }
+                }
+            }
+
+            isOnGround = groundDetected;
+            return collisionDetected;
+        }
+
+        public static bool HandleCollision(Enemy enemy, out bool isOnGround)
+        {
+            int minX = Math.Max(0, (int)(enemy.boundingBox.X / 16) - 1);
+            int minY = Math.Max(0, (int)(enemy.boundingBox.Y / 16) - 1);
+            int maxX = Math.Min(Game1.Instance._map.Width - 1, (int)((enemy.boundingBox.X + enemy.boundingBox.Width) / 16) + 1);
+            int maxY = Math.Min(Game1.Instance._map.Height - 1, (int)((enemy.boundingBox.Y + enemy.boundingBox.Height) / 16) + 1);
+
+            bool collisionDetected = false;
+            bool groundDetected = false;
+
+            for (int x = minX; x <= maxX; x++)
+            {
+                for (int y = minY; y <= maxY; y++)
+                {
+                    Rectangle tileRect = new Rectangle(x * 16, y * 16, 16, 16);
+                    if (Game1.Instance._map.MapData[x, y] != null && Game1.Instance._map.MapData[x, y].Collision && enemy.boundingBox.Intersects(tileRect))
+                    {
+                        collisionDetected = true;
+
+                        Vector2 depth = RectangleExtensions.GetIntersectionDepth(enemy.boundingBox, tileRect);
+
+                        if (depth != Vector2.Zero)
+                        {
+                            if (Math.Abs(depth.Y) < Math.Abs(depth.X))
+                            {
+                                if (enemy.boundingBox.Bottom <= tileRect.Top)
+                                {
+                                    groundDetected = true;
+                                }
+
+                                enemy.boundingBox = new Rectangle((int)enemy.boundingBox.X + (int)depth.X, enemy.boundingBox.Y, enemy.boundingBox.Width, enemy.boundingBox.Height);
+                            }
+                            else
+                            {
+                                enemy.boundingBox = new Rectangle((int)enemy.boundingBox.X, (int)enemy.boundingBox.Y + (int)depth.Y, enemy.boundingBox.Width, enemy.boundingBox.Width);
                             }
                         }
                     }

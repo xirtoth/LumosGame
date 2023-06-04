@@ -15,6 +15,8 @@ namespace Lumos
         public float Duration { get; set; }
         public Vector2 Position { get; set; }
 
+        public float PingPongValue { get; set; }
+
         private Color Color { get; set; }
         private float elapsedTime;
         private float destroyTimer;
@@ -41,10 +43,10 @@ namespace Lumos
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
             elapsedTime += deltaTime;
             destroyTimer += deltaTime;
-            if (elapsedTime >= 0.1f && movedAmount < 10f)
+            if (elapsedTime >= 0.1f && movedAmount < 30f)
             {
-                Position += new Vector2(0, -0.5f);
-                movedAmount += 0.5f;
+                Position += new Vector2(0, -2f);
+                movedAmount += 2f;
                 elapsedTime = 0f;
             }
             if (destroyTimer > Duration)
@@ -55,7 +57,15 @@ namespace Lumos
 
         public void Draw(Game1 game)
         {
-            game._spriteBatch.DrawString(game._myFont, Message, Position - game._cameraPosition, Color);
+            //PingPongValue = 0f;
+            float speed = 0.02f; // Adjust the speed of the ping-pong effect
+
+            // Update the ping-pong value
+            PingPongValue += speed;
+
+            // Calculate the scaled and shifted value within the range 0.8 to 1.2
+            float scale = MathHelper.Lerp(0.4f, 1.2f, (float)Math.Sin(PingPongValue));
+            game._spriteBatch.DrawString(game._myFont, Message, Position - game._cameraPosition, Color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
         }
     }
 }

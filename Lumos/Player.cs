@@ -1,11 +1,21 @@
-﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System.Buffers.Text;
+using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
+
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+
+using System.Buffers.Text;
+
+using System.Collections.Generic;
+using System.Linq;
+
 using System.Net.Mime;
 using System.Reflection.Metadata;
+using Lumos.Tools;
 
 namespace Lumos
 {
@@ -40,6 +50,8 @@ namespace Lumos
         public float velocityY { get; set; }
         public bool IsOnGround { get; internal set; }
 
+        public Tool tool { get; set; }
+
         public bool InventoryToggled { get; internal set; }
 
         public float velocityX { get; internal set; }
@@ -69,6 +81,7 @@ namespace Lumos
 
         public Player(Vector2 pos, string name, Texture2D playerTex)
         {
+            tool = new Gun();
             Inventory = new Inventory();
 
             animation = new Animation();
@@ -104,6 +117,8 @@ namespace Lumos
         public void Update(GameTime gameTime)
         {
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            Game1.Instance.light.Position = Pos - Game1.Instance._cameraPosition;
+            Game1.Instance.light2.Position = Pos - Game1.Instance._cameraPosition;
             if (InventoryToggled)
             {
                 Inventory.UI.UpdateInventory(Inventory);
@@ -167,6 +182,10 @@ namespace Lumos
                     }
                 }
 
+                if (pressedKeys.Contains(Keys.F))
+                {
+                    tool.Use();
+                }
                 if (pressedKeys.Contains(Keys.D))
                 {
                     if (animation.CurrentAnimationName != "walk")
@@ -177,7 +196,7 @@ namespace Lumos
                     facingDirection = 1;
                     if (CollisionManager.HandleCollision(new Rectangle((int)newPosition.X, (int)newPosition.Y, Rect.Width, Rect.Height), out isOnGround))
                     {
-                        newPosition.X = Pos.X - moveBackOffset; // Move player back by 1 unit in the opposite direction
+                        newPosition.X = Pos.X; // Move player back by 1 unit in the opposite direction
                     }
                     //  PlayerTextures = TileTextures.PlayerWalk;
                 }
@@ -201,7 +220,7 @@ namespace Lumos
                     newPosition.Y += MoveSpeed; // Move the player downwards
                     if (CollisionManager.HandleCollision(new Rectangle((int)newPosition.X, (int)newPosition.Y, Rect.Width, Rect.Height), out isOnGround))
                     {
-                        newPosition.Y = Pos.Y - moveBackOffset; // Move player back by 1 unit in the opposite direction
+                        newPosition.Y = Pos.Y; // Move player back by 1 unit in the opposite direction
                     }
                 }
 
@@ -211,7 +230,7 @@ namespace Lumos
                 // Check collision with the updated position
                 if (CollisionManager.HandleCollision(new Rectangle((int)newPosition.X, (int)newPosition.Y, Rect.Width, Rect.Height), out isOnGround))
                 {
-                    newPosition.Y = Pos.Y - moveBackOffset; // Move player back by 1 unit in the opposite direction
+                    newPosition.Y = Pos.Y; // Move player back by 1 unit in the opposite direction
                     IsOnGround = true;
                 }
                 if (pressedKeys.Contains(Keys.Space) && IsOnGround)
@@ -234,7 +253,7 @@ namespace Lumos
                 // Check collision with the updated position
                 if (CollisionManager.HandleCollision(new Rectangle((int)newPosition.X, (int)newPosition.Y, Rect.Width, Rect.Height), out isOnGround))
                 {
-                    newPosition.Y = Pos.Y - moveBackOffset; // Move player back by 1 unit in the opposite direction
+                    newPosition.Y = Pos.Y; // Move player back by 1 unit in the opposite direction
                     IsOnGround = true;
                 }
             }

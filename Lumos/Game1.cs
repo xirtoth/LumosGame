@@ -1,12 +1,14 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MonoGame.Extended;
 using MonoGame.Extended.Sprites;
 using MonoGame.Extended.Timers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Penumbra;
 
 namespace Lumos
 {
@@ -35,6 +37,7 @@ namespace Lumos
         public List<DamageMessage> _damageMessageList;
         public List<Enemy> _enemies;
         public List<Item> _items;
+        public List<Projectile> _projectiles;
         private float _currentTime = 0f;
         private float _lerpDuration = 100f; // Duration in seconds for each color transition
         private Color _startColor = Color.Black;
@@ -44,6 +47,19 @@ namespace Lumos
         private bool _wasMousePressed = false;
         private Effect _effect;
         private RenderTarget2D lightingRenderTarget;
+        public PenumbraComponent penumbra;
+
+        public Light light = new PointLight
+        {
+            Scale = new Vector2(1000f), // Range of the light source (how far the light will travel)
+            ShadowType = ShadowType.Solid // Will not lit hulls themselves
+        };
+
+        public Light light2 = new PointLight
+        {
+            Scale = new Vector2(400f),
+            ShadowType = ShadowType.Solid
+        };
 
         public static Game1 Instance { get; set; }
 
@@ -52,6 +68,10 @@ namespace Lumos
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
+            penumbra = new PenumbraComponent(this);
+            Components.Add(penumbra);
+            penumbra.Lights.Add(light);
+            penumbra.Lights.Add(light2);
         }
 
         protected override void Initialize()
@@ -63,6 +83,11 @@ namespace Lumos
             _graphics.ApplyChanges();// TODO: Add your initialization logic here
             Instance = this;
             base.Initialize();
+            light.Color = Color.DarkGreen;
+            light.Position = new Vector2(500, 500);
+            light.Intensity = 2;
+            light2.Color = Color.Purple;
+            light2.Intensity = 3;
         }
 
         protected override void LoadContent()
@@ -71,6 +96,7 @@ namespace Lumos
             _damageMessageList = new List<DamageMessage>();
             _enemies = new List<Enemy>();
             _items = new List<Item>();
+            _projectiles = new List<Projectile>();
             _spriteBatch = new SpriteBatch(GraphicsDevice);
             _player = new Player(new Vector2(200, -40), "Henkka", Content.Load<Texture2D>("player_00"));
             _myFont = Content.Load<SpriteFont>("MyFont");
@@ -89,7 +115,7 @@ namespace Lumos
 
             for (int i = 0; i < 20; i++)
             {
-                _enemies.Add(new Enemy(TileTextures.Enemy1Walk, new Vector2(i * 50, -25)));
+                _enemies.Add(new Enemy(TileTextures.Enemy1Walk, new Vector2(i * 50, -200)));
             }
 
             for (int i = 0; i < 0; i++)
@@ -98,6 +124,11 @@ namespace Lumos
             }
 
             // TODO: use this.Content to load your game content here
+        }
+
+        protected override void UnloadContent()
+        {
+            penumbra.Dispose();
         }
 
         private List<Rectangle> GenerateRectangles(int count, int width, int height, int spacing)
@@ -139,6 +170,11 @@ namespace Lumos
 
                 _map.Update(_player);
 
+                List<Projectile> projectileCopy = new List<Projectile>(_projectiles);
+                foreach (Projectile p in projectileCopy)
+                {
+                    p.Update(gameTime);
+                }
                 List<DamageMessage> damageMessagesCopy = new List<DamageMessage>(_damageMessageList);
                 foreach (DamageMessage dm in damageMessagesCopy)
                 {
@@ -283,6 +319,7 @@ namespace Lumos
 
         protected override void Draw(GameTime gameTime)
         {
+            penumbra.BeginDraw();
             GraphicsDevice.Clear(_lerpedColor);
 
             //GraphicsDevice.SetRenderTarget(lightingRenderTarget);
@@ -292,6 +329,7 @@ namespace Lumos
 
             _spriteBatch.Begin();
             _spriteBatch.Draw(_bg, new Vector2(0, -1000), Color.White);
+
             if (_player.InventoryToggled)
             {
                 Game1.Instance._player.Inventory.UI.DrawInventory(Game1.Instance._player.Inventory);
@@ -300,15 +338,25 @@ namespace Lumos
             foreach (Enemy e in _enemies)
             {
                 //   if (e.IsVisible(this))
-                e.Draw(_spriteBatch, _cameraPosition);
+                e.Draw(_spriteBatch, _cameraPosition, gameTime);
             }
+
+            ;
             foreach (Item i in _items)
             {
                 i.Draw(_spriteBatch);
             }
 
+            foreach (Projectile p in _projectiles)
+            {
+                p.Draw(_spriteBatch);
+            }
+
             _map.DrawMap(_spriteBatch, _player, _cameraPosition, GraphicsDevice.Viewport, GraphicsDevice, gameTime);
             _player.Draw(_spriteBatch, _cameraPosition, GraphicsDevice.Viewport);
+            _spriteBatch.End();
+            penumbra.Draw(gameTime);
+            _spriteBatch.Begin();
             _spriteBatch.DrawString(_myFont, _player.Name + " " + _player.Pos.X + " " + _player.Pos.Y, new Vector2(-2, -2), Color.Black);
             _spriteBatch.DrawString(_myFont, _player.Name + " " + _player.PreviousPos.X + " " + _player.PreviousPos.Y, new Vector2(-2, 10), Color.Black);
             foreach (Rectangle toolrectangle in _toolRectangles)
@@ -329,9 +377,10 @@ namespace Lumos
                 _frameCount = 0;
                 _elapsedTime = 0.0f;
             }
+            //penumbra.Draw(gameTime);
             _spriteBatch.End();
 
-            base.Draw(gameTime);
+            //base.Draw(gameTime);
         }
     }
 }

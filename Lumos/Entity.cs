@@ -25,9 +25,10 @@ namespace Lumos
         {
         }
 
-        public virtual void Draw(SpriteBatch spriteBatch, Vector2 cameraPos)
+        public virtual void Draw(SpriteBatch spriteBatch, Vector2 cameraPos, GameTime gametime)
         {
-            spriteBatch.Draw(texture, position - cameraPos, Color.White);
+            Color color2 = new Color(Color.White.R, Color.White.G, Color.White.B, (byte)128);
+            spriteBatch.Draw(texture, position - cameraPos, color2);
         }
     }
 }

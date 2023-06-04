@@ -58,6 +58,7 @@ namespace Lumos
             if (CollisionManager.HandleCollision(Game1.Instance._player, this))
             {
                 Game1.Instance._player.Inventory.AddItem(this);
+                Game1.Instance._damageMessageList.Add(new DamageMessage($"Collected {this.Name}", 3, Position + new Vector2(0, -20), Game1.Instance));
 
                 Game1.Instance._items.Remove(this);
             }
