@@ -30,6 +30,8 @@ namespace Lumos
 
         public static Texture2D[] PlayerWalk { get; set; }
 
+        public static Texture2D Apple { get; set; }
+
         public static void LoadContent(ContentManager gm)
         {
             Enemy1Animated = new Texture2D[4];
@@ -56,6 +58,7 @@ namespace Lumos
             TileTextures.EmptyTexture = gm.Load<Texture2D>("empty");
             TileTextures.GrassTop = gm.Load<Texture2D>("grasstop");
             TileTextures.MyFont = gm.Load<SpriteFont>("MyFont");
+            Apple = gm.Load<Texture2D>("apple");
         }
     }
 }

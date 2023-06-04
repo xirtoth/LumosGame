@@ -34,6 +34,7 @@ namespace Lumos
         private List<Rectangle> _toolRectangles;
         public List<DamageMessage> _damageMessageList;
         public List<Enemy> _enemies;
+        public List<Item> _items;
         private float _currentTime = 0f;
         private float _lerpDuration = 100f; // Duration in seconds for each color transition
         private Color _startColor = Color.Black;
@@ -69,6 +70,7 @@ namespace Lumos
             TileTextures.LoadContent(Content);
             _damageMessageList = new List<DamageMessage>();
             _enemies = new List<Enemy>();
+            _items = new List<Item>();
             _spriteBatch = new SpriteBatch(GraphicsDevice);
             _player = new Player(new Vector2(200, -40), "Henkka", Content.Load<Texture2D>("player_00"));
             _myFont = Content.Load<SpriteFont>("MyFont");
@@ -84,11 +86,15 @@ namespace Lumos
             _cameraPosition = _player.Pos;
             _map.GenerateMap();
             _toolRectangles = GenerateRectangles(10, 50, 50, 20);
-            _damageMessageList.Add(new DamageMessage("testi", 5f, new Vector2(10, 10), this));
-            _damageMessageList.Add(new DamageMessage("testi2", 5f, new Vector2(20, 20), this));
-            for (int i = 0; i < 100; i++)
+
+            for (int i = 0; i < 20; i++)
             {
-                _enemies.Add(new Enemy(TileTextures.Enemy1Walk, new Vector2(i * 32, -25)));
+                _enemies.Add(new Enemy(TileTextures.Enemy1Walk, new Vector2(i * 50, -25)));
+            }
+
+            for (int i = 0; i < 0; i++)
+            {
+                _items.Add(new Item("apple", "shitty apple", TileTextures.Apple, new Vector2(i * 12, -60)));
             }
 
             // TODO: use this.Content to load your game content here
@@ -143,6 +149,13 @@ namespace Lumos
                     // if (e.IsVisible(this))
                     e.Update(gameTime, _cameraPosition, _player, this);
                 }
+
+                List<Item> itemsCopy = new List<Item>(_items);
+                foreach (Item i in itemsCopy)
+                {
+                    i.Update(gameTime);
+                }
+                //_items = itemsCopy;
 
                 Vector2 screenCenter = new Vector2(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
                 _cameraPosition = _player.Pos - screenCenter;
@@ -279,11 +292,19 @@ namespace Lumos
 
             _spriteBatch.Begin();
             _spriteBatch.Draw(_bg, new Vector2(0, -1000), Color.White);
+            if (_player.InventoryToggled)
+            {
+                Game1.Instance._player.Inventory.UI.DrawInventory(Game1.Instance._player.Inventory);
+            }
 
             foreach (Enemy e in _enemies)
             {
                 //   if (e.IsVisible(this))
                 e.Draw(_spriteBatch, _cameraPosition);
+            }
+            foreach (Item i in _items)
+            {
+                i.Draw(_spriteBatch);
             }
 
             _map.DrawMap(_spriteBatch, _player, _cameraPosition, GraphicsDevice.Viewport, GraphicsDevice, gameTime);

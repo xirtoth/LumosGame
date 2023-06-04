@@ -190,10 +190,24 @@ namespace Lumos
             }
             if (health < 0)
             {
+                int lootAmount = rand.Next(1, 5);
+
+                for (int i = 0; i < lootAmount; i++)
+                {
+                    int lootType = rand.Next(0, 2);
+                    if (lootType == 0)
+                    {
+                        game._items.Add(new Item("apple", "apple", TileTextures.Apple, Position + new Vector2(rand.Next(-10, 10), rand.Next(-100, -2))));
+                    }
+                    else
+                    {
+                        game._items.Add(new Item("jorma", "jorma", TileTextures.WaterTexture, Position + new Vector2(rand.Next(-10, 10), rand.Next(-100, -2))));
+                    }
+                }
                 game._enemies.Remove(this);
             }
             game._damageMessageList.Add(new DamageMessage(amount.ToString(), 2f, Position, game));
-            game._player.Pos = new Vector2(game._player.Pos.X - 5f, game._player.Pos.Y);
+            // game._player.Pos = new Vector2(game._player.Pos.X - 5f, game._player.Pos.Y);
         }
     }
 }

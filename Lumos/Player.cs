@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Buffers.Text;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mime;
 using System.Reflection.Metadata;
@@ -27,6 +28,8 @@ namespace Lumos
         public Rectangle VerticalCollisionRect { get; set; }
         public Rectangle LocalBounds { get; set; }
 
+        public Inventory Inventory { get; set; }
+
         public Texture2D PlayerTex;
 
         public Texture2D[] PlayerTextures;
@@ -36,6 +39,8 @@ namespace Lumos
         private const float Gravity = 0.2f;
         public float velocityY { get; set; }
         public bool IsOnGround { get; internal set; }
+
+        public bool InventoryToggled { get; internal set; }
 
         public float velocityX { get; internal set; }
         public bool isCollidingLeft { get; internal set; } = false;
@@ -55,11 +60,17 @@ namespace Lumos
 
         private int currentFrame;
 
+        private bool inventoryToggleCooldown = false;
+        private float inventoryToggleCooldownTimer = 0f;
+        private float inventoryToggleCooldownDuration = 0.2f;
+
         public Player()
         { }
 
         public Player(Vector2 pos, string name, Texture2D playerTex)
         {
+            Inventory = new Inventory();
+
             animation = new Animation();
             Pos = pos;
             Name = name;
@@ -93,7 +104,10 @@ namespace Lumos
         public void Update(GameTime gameTime)
         {
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
-
+            if (InventoryToggled)
+            {
+                Inventory.UI.UpdateInventory(Inventory);
+            }
             PreviousPos = Pos;
             animation.Update(gameTime);
 
@@ -105,7 +119,7 @@ namespace Lumos
                 //      velocityY += Gravity * deltaTime;
             }
 
-            CheckInput();
+            CheckInput(gameTime);
 
             Pos += new Vector2(velocityX * deltaTime, velocityY * deltaTime);
 
@@ -117,7 +131,7 @@ namespace Lumos
 
         private bool isJumping = false; // Flag to track if the player is jumping
 
-        private void CheckInput()
+        private void CheckInput(GameTime gameTime)
         {
             bool isOnGround = false;
             MouseState mouseState = Mouse.GetState();
@@ -133,6 +147,26 @@ namespace Lumos
             if (pressedKeys.Length > 0)
             {
                 // Handle player movement
+                if (pressedKeys.Contains(Keys.I))
+                {
+                    if (!inventoryToggleCooldown)
+                    {
+                        InventoryToggled = !InventoryToggled;
+                        inventoryToggleCooldown = true;
+                        inventoryToggleCooldownTimer = 0f;
+                    }
+                }
+
+                // Update the cooldown timer
+                if (inventoryToggleCooldown)
+                {
+                    inventoryToggleCooldownTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+                    if (inventoryToggleCooldownTimer >= inventoryToggleCooldownDuration)
+                    {
+                        inventoryToggleCooldown = false;
+                    }
+                }
+
                 if (pressedKeys.Contains(Keys.D))
                 {
                     if (animation.CurrentAnimationName != "walk")
@@ -214,7 +248,8 @@ namespace Lumos
             // Update the grounded state
             IsOnGround = isOnGround;
 
-            foreach (Enemy e in Game1.Instance._enemies)
+            List<Enemy> enemyCopy = new List<Enemy>(Game1.Instance._enemies);
+            foreach (Enemy e in enemyCopy)
             {
                 if (CollisionManager.HandleCollision(this, e))
                 {
