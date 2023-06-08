@@ -103,8 +103,21 @@ namespace Lumos
             previousPosition = Position;
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
             float gravity = 2f;
-            bool isOnGround;
+            bool isOnGround = false;
             Vector2 direction = Destination - position;
+            if (Moving)
+            {
+                float distanceToMove = MovementSpeed * deltaTime;
+                previousPosition = Position;
+
+                Position = new Vector2(Position.X - distanceToMove, Position.Y);
+                CollisionRect = new Rectangle((int)Position.X, (int)Position.Y, Textures[currentFrame].Width, Textures[currentFrame].Height);
+                boundingBox = new Rectangle((int)(Position.X - cameraPos.X), (int)(Position.Y - cameraPos.Y), texture.Width, texture.Height);
+                previousPosition.X = Position.X;
+
+                // CheckCollision(game._map.MapData, cameraPos);
+                Textures = TileTextures.Enemy1Walk;
+            }
             //Position = new Vector2(Position.X, Position.Y + 0.1f);
             //  CheckCollision(game._map.MapData, cameraPos);
             Position = new Vector2(Position.X, Position.Y + gravity);
@@ -114,20 +127,6 @@ namespace Lumos
                 isOnGround = true;
                 CollisionRect = new Rectangle((int)Position.X, (int)Position.Y, Textures[currentFrame].Width, Textures[currentFrame].Height);
                 boundingBox = new Rectangle((int)(Position.X - cameraPos.X), (int)(Position.Y - cameraPos.Y), texture.Width, texture.Height);
-            }
-            if (Moving)
-            {
-                float distanceToMove = MovementSpeed * deltaTime;
-                previousPosition = Position;
-                if (isOnGround)
-                {
-                    Position = new Vector2(Position.X - distanceToMove, Position.Y);
-                    CollisionRect = new Rectangle((int)Position.X, (int)Position.Y, Textures[currentFrame].Width, Textures[currentFrame].Height);
-                    boundingBox = new Rectangle((int)(Position.X - cameraPos.X), (int)(Position.Y - cameraPos.Y), texture.Width, texture.Height);
-                }
-
-                // CheckCollision(game._map.MapData, cameraPos);
-                Textures = TileTextures.Enemy1Walk;
             }
 
             if (elapsedTime > movementTime)
@@ -188,12 +187,12 @@ namespace Lumos
                 spriteBatch.Draw(texture, position - cameraPos, null, Color.White, rotationAngle + 90, origin, 1.0f, SpriteEffects.None, 0);
             }
             // Game1.Instance.penumbra.Draw(gameTime);
-            DrawHealthText(spriteBatch, Position);
+            DrawHealthText(spriteBatch, position);
         }
 
         public void DrawHealthText(SpriteBatch spriteBatch, Vector2 cameraPos)
         {
-            spriteBatch.DrawString(TileTextures.MyFont, $"{health}/{maxHealth}", Position + new Vector2(-20, -texture.Height), Color.Red);
+            spriteBatch.DrawString(TileTextures.MyFont, $"{health}/{maxHealth}", position - cameraPos, Color.Red);
         }
 
         private void SetNewDestination()

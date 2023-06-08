@@ -19,6 +19,10 @@ namespace Lumos
 
         private bool shouldUpdatePosition = true;
 
+        private float AttractSpeed { get; set; } = 4f;
+
+        private float AttractRange { get; set; } = 60f;
+
         public int Count { get; set; } = 1;
 
         public Light light = new PointLight
@@ -58,6 +62,7 @@ namespace Lumos
             bool isGrounded;
 
             light.Position = Position - Game1.Instance._cameraPosition;
+            AttractToPlayer();
 
             if (shouldUpdatePosition)
             {
@@ -81,6 +86,20 @@ namespace Lumos
                 Game1.Instance._damageMessageList.Add(new DamageMessage($"Collected {this.Name}", 3, Position + new Vector2(0, -20), Game1.Instance));
                 Game1.Instance.penumbra.Lights.Remove(light);
                 Game1.Instance._items.Remove(this);
+            }
+        }
+
+        private void AttractToPlayer()
+        {
+            if (Vector2.Distance(Position, Game1.Instance._player.Pos) < AttractRange)
+            {
+                var direction = Vector2.Normalize(Game1.Instance._player.Pos - Position);
+                Position += direction * AttractSpeed;
+                if (Vector2.Distance(Position, Game1.Instance._player.Pos) < 1f)
+                {
+                    Game1.Instance._items.Add(this);
+                    Game1.Instance._items.Remove(this);
+                }
             }
         }
 

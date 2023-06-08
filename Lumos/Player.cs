@@ -18,8 +18,6 @@ namespace Lumos
 
         public Vector2 PreviousPos { get; set; }
         public string Name { get; set; }
-
-        private readonly int Size = 16;
         public float previousBottom { get; set; }
         public MapTiles selectedTile { get; set; } = MapTiles.water;
 
@@ -39,7 +37,6 @@ namespace Lumos
 
         private Animation animation;
 
-        private const float Gravity = 0.2f;
         public float velocityY { get; set; }
         public bool IsOnGround { get; internal set; }
 
@@ -54,17 +51,9 @@ namespace Lumos
         private int facingDirection = 1;
 
         private float moveBackOffset = 0.01f;
-
-        private float animationTime = 0f;
-
-        private float animationFps = 0.5f;
-
         private float animationSpeedIdle = 2f;
 
         private float animationSpeedWalk = 4f;
-
-        private int currentFrame;
-
         private bool inventoryToggleCooldown = false;
         private float inventoryToggleCooldownTimer = 0f;
         private float inventoryToggleCooldownDuration = 0.2f;
@@ -137,93 +126,86 @@ namespace Lumos
             // IsOnGround = false;
         }
 
-        private bool isJumping = false; // Flag to track if the player is jumping
-
         private void CheckInput(GameTime gameTime)
         {
-            bool isOnGround = false;
-            MouseState mouseState = Mouse.GetState();
-            float moveSpeedX = MoveSpeed;
-            float moveSpeedY = MoveSpeed;
-            float gravity = 2f; // Adjust the gravity value as needed
+            HandleInventoryToggle(gameTime);
+            HandlePlayerMovement(gameTime);
+            HandlePlayerActions(gameTime);
+        }
 
+        private void HandleInventoryToggle(GameTime gameTime)
+        {
+            if (Keyboard.GetState().IsKeyDown(Keys.I))
+            {
+                if (!inventoryToggleCooldown)
+                {
+                    InventoryToggled = !InventoryToggled;
+                    inventoryToggleCooldown = true;
+                    inventoryToggleCooldownTimer = 0f;
+                }
+            }
+
+            if (inventoryToggleCooldown)
+            {
+                inventoryToggleCooldownTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+                if (inventoryToggleCooldownTimer >= inventoryToggleCooldownDuration)
+                {
+                    inventoryToggleCooldown = false;
+                }
+            }
+        }
+
+        private void HandlePlayerMovement(GameTime gameTime)
+        {
             KeyboardState keyboardState = Keyboard.GetState();
             Keys[] pressedKeys = keyboardState.GetPressedKeys();
 
-            Vector2 newPosition = Pos; // Store the modified position in a separate variable
+            Vector2 newPosition = Pos;
+
+            float moveSpeedX = MoveSpeed;
+            float gravity = 2f;
+
+            bool isOnGround = false;
 
             if (pressedKeys.Length > 0)
             {
-                // Handle player movement
-                if (pressedKeys.Contains(Keys.I))
-                {
-                    if (!inventoryToggleCooldown)
-                    {
-                        InventoryToggled = !InventoryToggled;
-                        inventoryToggleCooldown = true;
-                        inventoryToggleCooldownTimer = 0f;
-                    }
-                }
-
-                // Update the cooldown timer
-                if (inventoryToggleCooldown)
-                {
-                    inventoryToggleCooldownTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
-                    if (inventoryToggleCooldownTimer >= inventoryToggleCooldownDuration)
-                    {
-                        inventoryToggleCooldown = false;
-                    }
-                }
-
-                if (pressedKeys.Contains(Keys.F))
-                {
-                    tool.Use();
-                }
                 if (pressedKeys.Contains(Keys.D))
                 {
-                    if (animation.CurrentAnimationName != "walk")
-                    {
-                        animation.PlayAnimation("walk");
-                    }
-                    newPosition.X += MoveSpeed; // Move the player to the right
+                    // Handle player movement to the right
+                    newPosition.X += MoveSpeed;
                     facingDirection = 1;
-                    if (CollisionManager.HandleCollision(new Rectangle((int)newPosition.X, (int)newPosition.Y, Rect.Width, Rect.Height), out isOnGround))
+                    if (HandleCollisionWithNewPosition(newPosition, out isOnGround))
                     {
-                        newPosition.X = Pos.X; // Move player back by 1 unit in the opposite direction
+                        newPosition.X = Pos.X;
                     }
-                    //  PlayerTextures = TileTextures.PlayerWalk;
+                    animation.PlayAnimation("walk");
                 }
                 else if (pressedKeys.Contains(Keys.A))
                 {
+                    // Handle player movement to the left
+                    newPosition.X -= MoveSpeed;
                     facingDirection = -1;
-                    if (animation.CurrentAnimationName != "walk")
+                    if (HandleCollisionWithNewPosition(newPosition, out isOnGround))
                     {
-                        // Play the "walk" animation
-                        animation.PlayAnimation("walk");
+                        newPosition.X = Pos.X + moveBackOffset;
                     }
-                    newPosition.X -= MoveSpeed; // Move the player to the left
-                    if (CollisionManager.HandleCollision(new Rectangle((int)newPosition.X, (int)newPosition.Y, Rect.Width, Rect.Height), out isOnGround))
-                    {
-                        newPosition.X = Pos.X + moveBackOffset; // Move player back by 1 unit in the opposite direction
-                    }
-                    // PlayerTextures = TileTextures.PlayerWalk;
+                    animation.PlayAnimation("walk");
                 }
                 else if (pressedKeys.Contains(Keys.S))
                 {
-                    newPosition.Y += MoveSpeed; // Move the player downwards
-                    if (CollisionManager.HandleCollision(new Rectangle((int)newPosition.X, (int)newPosition.Y, Rect.Width, Rect.Height), out isOnGround))
+                    // Handle player movement downwards
+                    newPosition.Y += MoveSpeed;
+                    if (HandleCollisionWithNewPosition(newPosition, out isOnGround))
                     {
-                        newPosition.Y = Pos.Y; // Move player back by 1 unit in the opposite direction
+                        newPosition.Y = Pos.Y;
                     }
                 }
-
                 // Apply gravity to the player when moving right or left
                 newPosition.Y += gravity;
 
-                // Check collision with the updated position
-                if (CollisionManager.HandleCollision(new Rectangle((int)newPosition.X, (int)newPosition.Y, Rect.Width, Rect.Height), out isOnGround))
+                if (HandleCollisionWithNewPosition(newPosition, out isOnGround))
                 {
-                    newPosition.Y = Pos.Y; // Move player back by 1 unit in the opposite direction
+                    newPosition.Y = Pos.Y;
                     IsOnGround = true;
                 }
                 if (pressedKeys.Contains(Keys.Space) && IsOnGround)
@@ -234,39 +216,32 @@ namespace Lumos
             else
             {
                 // No keys are pressed
-                // PlayerTextures = TileTextures.PlayerIdle;
-                if (animation.CurrentAnimationName != "idle")
-                {
-                    // Play the "idle" animation
-                    animation.PlayAnimation("idle");
-                }
-                // Apply gravity to the player
+                animation.PlayAnimation("idle");
                 newPosition.Y += gravity;
-
-                // Check collision with the updated position
-                if (CollisionManager.HandleCollision(new Rectangle((int)newPosition.X, (int)newPosition.Y, Rect.Width, Rect.Height), out isOnGround))
+                if (HandleCollisionWithNewPosition(newPosition, out isOnGround))
                 {
-                    newPosition.Y = Pos.Y; // Move player back by 1 unit in the opposite direction
+                    newPosition.Y = Pos.Y;
                     IsOnGround = true;
                 }
             }
 
-            // Assign the new position back to the Pos property
             Pos = newPosition;
-
-            // Update player position based on velocity
             PreviousPos = Pos;
-
-            // Update the grounded state
             IsOnGround = isOnGround;
+        }
 
-            List<Enemy> enemyCopy = new List<Enemy>(Game1.Instance._enemies);
-            foreach (Enemy e in enemyCopy)
+        private bool HandleCollisionWithNewPosition(Vector2 newPosition, out bool isOnGround)
+        {
+            Rectangle newRect = new Rectangle((int)newPosition.X, (int)newPosition.Y, Rect.Width, Rect.Height);
+            bool collision = CollisionManager.HandleCollision(newRect, out isOnGround);
+            return collision;
+        }
+
+        private void HandlePlayerActions(GameTime gameTime)
+        {
+            if (Keyboard.GetState().IsKeyDown(Keys.F))
             {
-                if (CollisionManager.HandleCollision(this, e))
-                {
-                    e.TakeDamage(100, Game1.Instance);
-                }
+                tool.Use();
             }
         }
     }

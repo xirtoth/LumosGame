@@ -13,7 +13,9 @@ namespace Lumos
         dirtTop,
         water,
         empty,
-        grassTop
+        grassTop,
+        test,
+        mithril
     }
 
     public class Map
@@ -51,13 +53,13 @@ namespace Lumos
                     {
                         MapData[x, y] = new Tile(MapTiles.empty, TileTextures.EmptyTexture, false, false);
                     }
-                    if (y < 20 && y > 19)
-                    {
-                        if (random.Next(0, 2) == 1)
-                        {
-                            MapData[x, y] = new Tile(MapTiles.dirt, TileTextures.DirtTexture, true, false);
-                        }
-                    }
+                    /*     if (y < 20 && y > 18)
+                         {
+                             if (random.Next(0, 2) == 1)
+                             {
+                                 MapData[x, y] = new Tile(MapTiles.dirt, TileTextures.DirtTexture, true, false);
+                             }
+                         }*/
                     /* else
                      {
                          var rand = random.Next(0, 2);
@@ -77,6 +79,16 @@ namespace Lumos
                 }
             }
 
+            for (int x = 0; x < Width / 2 + Height / 2; x++)
+            {
+                // Generate caves using random walk
+                // int startX = random.Next(10, Width - 10);
+                int startX = random.Next(10, Width);
+                int startY = random.Next(25, Height - 10);
+                int caveSize = random.Next(10, 100);
+
+                RandomWalk(startX, startY, caveSize, new Tile(MapTiles.empty, TileTextures.EmptyTexture, true, false));
+            }
             for (int x = 0; x < Width / 10 + Height / 10; x++)
             {
                 // Generate caves using random walk
@@ -85,7 +97,16 @@ namespace Lumos
                 int startY = random.Next(25, Height - 10);
                 int caveSize = random.Next(10, 100);
 
-                RandomWalk(startX, startY, caveSize);
+                RandomWalk(startX, startY, caveSize, new Tile(MapTiles.water, TileTextures.WaterTexture, false, false));
+            }
+            for (int x = 0; x < Width / 10 + Height / 10; x++)
+            {
+                // Generate caves using random walk
+                // int startX = random.Next(10, Width - 10);
+                int startX = random.Next(10, Width);
+                int startY = random.Next(25, Height - 10);
+                int caveSize = random.Next(10, 100);
+                RandomWalk(startX, startY, caveSize, new Tile(MapTiles.mithril, TileTextures.Mithril, true, false));
             }
 
             /*int waterCount = 0;
@@ -110,14 +131,17 @@ namespace Lumos
         /// <param name="startX">Start position x</param>
         /// <param name="startY">Start position y</param>
         /// <param name="caveSize">Size of cave</param>
-        private void RandomWalk(int startX, int startY, int caveSize)
+        private void RandomWalk(int startX, int startY, int caveSize, Tile tile)
         {
             int currentX = startX;
             int currentY = startY;
 
             while (caveSize > 0)
             {
-                MapData[currentX, currentY] = new Tile(MapTiles.empty, TileTextures.EmptyTexture, false, false);
+                if (MapData[currentX, currentY].MapTile == MapTiles.dirt)
+                {
+                    MapData[currentX, currentY] = tile;
+                }
 
                 // Move in a random direction
                 int direction = random.Next(4);
