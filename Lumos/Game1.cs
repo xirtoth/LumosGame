@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Penumbra;
+using System.ComponentModel.DataAnnotations;
 
 namespace Lumos
 {
@@ -46,8 +47,12 @@ namespace Lumos
         private Color _lerpedColor;
         private bool _wasMousePressed = false;
         private Effect _effect;
+        private Effect _flashEffect;
         private RenderTarget2D lightingRenderTarget;
         public PenumbraComponent penumbra;
+
+        private float testProjectileTimer = 0f;
+        private float testProjectileTreshold = 0.0001f;
 
         public Light light = new PointLight
         {
@@ -79,7 +84,11 @@ namespace Lumos
             _graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
             _graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
             _graphics.IsFullScreen = false;
-            //_graphics.SynchronizeWithVerticalRetrace = false;
+            _graphics.SynchronizeWithVerticalRetrace = false;
+
+            // TargetElapsedTime = TimeSpan.FromSeconds(1.0 / 700); // Sets the frame rate to 120 FPS
+            IsFixedTimeStep = true;
+
             _graphics.ApplyChanges();// TODO: Add your initialization logic here
             Instance = this;
             base.Initialize();
@@ -98,12 +107,13 @@ namespace Lumos
             _items = new List<Item>();
             _projectiles = new List<Projectile>();
             _spriteBatch = new SpriteBatch(GraphicsDevice);
-            _player = new Player(new Vector2(200, -40), "Henkka", Content.Load<Texture2D>("player_00"));
+            _player = new Player(new Vector2(200, 50), "Henkka", Content.Load<Texture2D>("player_00"));
             _myFont = Content.Load<SpriteFont>("MyFont");
 
-            //Effect shaderEffect = Content.Load<Effect>("torchshader");
-            //TorchShader torchShader = new TorchShader(shaderEffect);
-            _effect = Content.Load<Effect>("torchshader");
+            // Effect shaderEffect = Content.Load<Effect>("black");
+            // TorchShader torchShader = new TorchShader(shaderEffect);
+            _effect = Content.Load<Effect>("black");
+            _flashEffect = Content.Load<Effect>("flasheffect");
             lightingRenderTarget = new RenderTarget2D(GraphicsDevice, 64, 64);
             _arrow = Content.Load<Texture2D>("arrow");
             _enemyTex = Content.Load<Texture2D>("Spaceship1");
@@ -113,9 +123,9 @@ namespace Lumos
             _map.GenerateMap();
             _toolRectangles = GenerateRectangles(10, 50, 50, 20);
 
-            for (int i = 0; i < 200; i++)
+            for (int i = 0; i < 1000; i++)
             {
-                _enemies.Add(new Enemy(TileTextures.Enemy1Walk, new Vector2(i * 50, -200)));
+                _enemies.Add(new Enemy(TileTextures.Enemy1Walk, new Vector2(i * 60, 0)));
             }
 
             for (int i = 0; i < 0; i++)
@@ -156,6 +166,7 @@ namespace Lumos
         {
             if (this.IsActive)
             {
+                //CreateTestProjectiles(gameTime);
                 UpdateTime(gameTime);
                 MouseState mouseState = CheckMouseInput();
                 if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
@@ -197,6 +208,23 @@ namespace Lumos
                 _cameraPosition = _player.Pos - screenCenter;
                 base.Update(gameTime);
             }
+        }
+
+        private void CreateTestProjectiles(GameTime gameTime)
+        {
+            // float deltatime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            // testProjectileTimer += deltatime;
+            // if (testProjectileTimer > testProjectileTreshold)
+            // {
+            float minValue = -1.0f; // Minimum value of the range
+            float maxValue = 1.0f; // Maximum value of the range
+            float randomNumber = (float)(rand.NextDouble() * (maxValue - minValue) + minValue);
+            float randomNumber2 = (float)(rand.NextDouble() * (maxValue - minValue) + minValue);
+            var test = new Vector2(randomNumber, randomNumber2);
+            var direction = Vector2.Normalize(test);
+            _projectiles.Add(new Projectile(3f, new Vector2(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2), direction, TileTextures.Apple));
+            // testProjectileTimer = 0;
+            // }
         }
 
         private MouseState CheckMouseInput()
@@ -320,29 +348,27 @@ namespace Lumos
 
         protected override void Draw(GameTime gameTime)
         {
-            penumbra.BeginDraw();
             GraphicsDevice.Clear(_lerpedColor);
-
-            //GraphicsDevice.SetRenderTarget(lightingRenderTarget);
-            //GraphicsDevice.Clear(Color.Black);
-
-            // Apply the lighting shader
+            penumbra.BeginDraw();
 
             _spriteBatch.Begin();
-            _spriteBatch.Draw(_bg, new Vector2(0, -1000), Color.White);
 
+            // Draw background
+            _spriteBatch.Draw(_bg, Vector2.Zero, _lerpedColor);
+
+            // Draw inventory if toggled
             if (_player.InventoryToggled)
             {
                 Game1.Instance._player.Inventory.UI.DrawInventory(Game1.Instance._player.Inventory);
             }
 
+            // Draw enemies
             foreach (Enemy e in _enemies)
             {
-                //   if (e.IsVisible(this))
                 e.Draw(_spriteBatch, _cameraPosition, gameTime);
             }
 
-            ;
+            // Draw items and projectiles
             foreach (Item i in _items)
             {
                 i.Draw(_spriteBatch);
@@ -353,22 +379,34 @@ namespace Lumos
                 p.Draw(_spriteBatch);
             }
 
+            // Draw map and player
             _map.DrawMap(_spriteBatch, _player, _cameraPosition, GraphicsDevice.Viewport, GraphicsDevice, gameTime);
             _player.Draw(_spriteBatch, _cameraPosition, GraphicsDevice.Viewport);
+
             _spriteBatch.End();
+
+            // Draw lighting using Penumbra
             penumbra.Draw(gameTime);
+
             _spriteBatch.Begin();
+
+            // Draw additional UI elements
             _spriteBatch.DrawString(_myFont, _player.Name + " " + _player.Pos.X + " " + _player.Pos.Y, new Vector2(-2, -2), Color.Black);
             _spriteBatch.DrawString(_myFont, _player.Name + " " + _player.PreviousPos.X + " " + _player.PreviousPos.Y, new Vector2(-2, 10), Color.Black);
-            foreach (Rectangle toolrectangle in _toolRectangles)
+
+            // Draw tool rectangles
+            foreach (Rectangle toolRectangle in _toolRectangles)
             {
-                _spriteBatch.Draw(TileTextures.DirtTexture, toolrectangle, Color.Red);
+                _spriteBatch.Draw(TileTextures.DirtTexture, toolRectangle, Color.Red);
             }
+
+            // Draw damage messages
             foreach (DamageMessage dm in _damageMessageList)
             {
                 dm.Draw(this);
             }
 
+            // Update and display FPS
             _elapsedTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
             _frameCount++;
 
@@ -378,10 +416,8 @@ namespace Lumos
                 _frameCount = 0;
                 _elapsedTime = 0.0f;
             }
-            //penumbra.Draw(gameTime);
-            _spriteBatch.End();
 
-            //base.Draw(gameTime);
+            _spriteBatch.End();
         }
     }
 }

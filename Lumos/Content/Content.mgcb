@@ -67,6 +67,12 @@
 /processorParam:TextureFormat=Color
 /build:bgmountain.jpg
 
+#begin black.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:black.fx
+
 #begin dirttop.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -97,6 +103,12 @@
 /processorParam:PremultiplyAlpha=True
 /processorParam:TextureFormat=Compressed
 /build:File.spritefont;MyFont
+
+#begin flasheffect.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:flasheffect.fx
 
 #begin grasstop.png
 /importer:TextureImporter

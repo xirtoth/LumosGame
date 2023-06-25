@@ -26,7 +26,7 @@ namespace Lumos
         {
         }
 
-        public virtual void Use()
+        public virtual void Use(GameTime gametime)
         {
         }
     }

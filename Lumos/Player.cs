@@ -98,6 +98,7 @@ namespace Lumos
 
         public void Update(GameTime gameTime)
         {
+            tool.Update(gameTime);
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
             Game1.Instance.light.Position = Pos - Game1.Instance._cameraPosition;
             Game1.Instance.light2.Position = Pos - Game1.Instance._cameraPosition;
@@ -228,6 +229,30 @@ namespace Lumos
             Pos = newPosition;
             PreviousPos = Pos;
             IsOnGround = isOnGround;
+            int tileSize = 16; // Assuming each tile is 16x16 in size
+            int radius = 12; // Radius of the circular area
+
+            int centerX = (int)Pos.X / tileSize; // Calculate center X position in tile coordinates
+            int centerY = (int)Pos.Y / tileSize; // Calculate center Y position in tile coordinates
+
+            for (int x = centerX - radius; x <= centerX + radius; x++)
+            {
+                for (int y = centerY - radius; y <= centerY + radius; y++)
+                {
+                    int tileX = x;
+                    int tileY = y;
+
+                    // Calculate the distance between the tile and the center of the circular area
+                    float distance = Vector2.Distance(new Vector2(centerX, centerY), new Vector2(tileX, tileY));
+
+                    // Check if the tile falls within the circular area
+                    if (distance <= radius && tileX >= 0 && tileX < Game1.Instance._map.MapData.GetLength(0) &&
+                        tileY >= 0 && tileY < Game1.Instance._map.MapData.GetLength(1))
+                    {
+                        Game1.Instance._map.MapData[tileX, tileY].IsVisible = true;
+                    }
+                }
+            }
         }
 
         private bool HandleCollisionWithNewPosition(Vector2 newPosition, out bool isOnGround)
@@ -241,7 +266,7 @@ namespace Lumos
         {
             if (Keyboard.GetState().IsKeyDown(Keys.F))
             {
-                tool.Use();
+                tool.Use(gameTime);
             }
         }
     }

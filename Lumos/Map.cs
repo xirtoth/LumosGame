@@ -51,7 +51,7 @@ namespace Lumos
                 {
                     if (y < 20)
                     {
-                        MapData[x, y] = new Tile(MapTiles.empty, TileTextures.EmptyTexture, false, false);
+                        MapData[x, y] = new Tile(MapTiles.empty, TileTextures.EmptyTexture, false, false, true);
                     }
                     /*     if (y < 20 && y > 18)
                          {
@@ -72,9 +72,13 @@ namespace Lumos
                              MapData[x, y] = MapTiles.empty;
                          }
                      }*/
+                    else if (y > 18 && y < 24)
+                    {
+                        MapData[x, y] = new Tile(MapTiles.dirt, TileTextures.DirtTexture, true, false, true);
+                    }
                     else
                     {
-                        MapData[x, y] = new Tile(MapTiles.dirt, TileTextures.DirtTexture, true, false);
+                        MapData[x, y] = Tiles.CreateDirt();
                     }
                 }
             }
@@ -87,7 +91,7 @@ namespace Lumos
                 int startY = random.Next(25, Height - 10);
                 int caveSize = random.Next(10, 100);
 
-                RandomWalk(startX, startY, caveSize, new Tile(MapTiles.empty, TileTextures.EmptyTexture, true, false));
+                RandomWalk(startX, startY, caveSize, new Tile(MapTiles.empty, TileTextures.EmptyTexture, false, false, false));
             }
             for (int x = 0; x < Width / 10 + Height / 10; x++)
             {
@@ -97,7 +101,7 @@ namespace Lumos
                 int startY = random.Next(25, Height - 10);
                 int caveSize = random.Next(10, 100);
 
-                RandomWalk(startX, startY, caveSize, new Tile(MapTiles.water, TileTextures.WaterTexture, false, false));
+                RandomWalk(startX, startY, caveSize, new Tile(MapTiles.water, TileTextures.WaterTexture, false, false, false));
             }
             for (int x = 0; x < Width / 10 + Height / 10; x++)
             {
@@ -106,7 +110,7 @@ namespace Lumos
                 int startX = random.Next(10, Width);
                 int startY = random.Next(25, Height - 10);
                 int caveSize = random.Next(10, 100);
-                RandomWalk(startX, startY, caveSize, new Tile(MapTiles.mithril, TileTextures.Mithril, true, false));
+                RandomWalk(startX, startY, caveSize, Tiles.CreateMithril());
             }
 
             /*int waterCount = 0;
@@ -265,7 +269,7 @@ namespace Lumos
                             {
                                 if (MapData[x, y + 1].MapTile != MapTiles.dirt)
                                 {
-                                    MapData[x, y] = new Tile(MapTiles.empty, TileTextures.EmptyTexture, false, false);
+                                    MapData[x, y] = new Tile(MapTiles.empty, TileTextures.EmptyTexture, false, false, false);
                                 }
                             }
                         }
@@ -276,7 +280,7 @@ namespace Lumos
                             {
                                 if (MapData[x, y - 1].MapTile == MapTiles.empty)
                                 {
-                                    MapData[x, y] = new Tile(MapTiles.grassTop, TileTextures.GrassTop, true, false);
+                                    MapData[x, y] = new Tile(MapTiles.grassTop, TileTextures.GrassTop, true, false, true);
                                 }
                             }
                             Rectangle tileRect = new Rectangle(
@@ -295,7 +299,14 @@ namespace Lumos
                                  }
                              }*/
                         }
-                        spriteBatch.Draw(MapData[x, y].Texture, tilePosition, Color.White);
+                        if (MapData[x, y].IsVisible)
+                        {
+                            spriteBatch.Draw(MapData[x, y].Texture, tilePosition, Color.White);
+                        }
+                        else
+                        {
+                            spriteBatch.Draw(MapData[x, y].Texture, tilePosition, Color.Black);
+                        }
                         /*    else if (MapData[x, y].MapTile == MapTiles.dirtTop)
                             {
                                 {
