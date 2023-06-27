@@ -18,6 +18,7 @@ float4 MainPS(VertexShaderOutput input) : SV_Target
 
     // Calculate the distance from the center of the globe
     color.rgb = 1.0;
+    
 
     return color;
 }

@@ -148,6 +148,7 @@ namespace Lumos
                     CollisionRect = new Rectangle((int)Position.X, (int)Position.Y, Textures[currentFrame].Width, Textures[currentFrame].Height);
                     boundingBox = new Rectangle((int)(Position.X - cameraPos.X), (int)(Position.Y - cameraPos.Y), texture.Width, texture.Height);
                 }
+
                 // Change movement direction if collision occurs
                 if (CollisionManager.HandleCollision(leftRect, out isOnGround) && canChangeDirection)
                 {
@@ -159,7 +160,11 @@ namespace Lumos
                     Position = new Vector2(Position.X + movementOffset, Position.Y);
                     leftRect = new Rectangle((int)Position.X - 2, (int)Position.Y + 8, Textures[currentFrame].Width - 20, Textures[currentFrame].Height - 20);
                 }
+
+                // Update rightRect after leftRect collision checks
                 rightRect = new Rectangle((int)Position.X + Textures[currentFrame].Width + 2, (int)Position.Y + 8, Textures[currentFrame].Width - 20, Textures[currentFrame].Height - 20);
+
+                // Move horizontally if on the ground and not colliding
                 if (isOnGround && !CollisionManager.HandleCollision(rightRect, out isOnGround))
                 {
                     float movementOffset = (movementDir == 0) ? -distanceToMove : distanceToMove;
@@ -167,6 +172,7 @@ namespace Lumos
                     CollisionRect = new Rectangle((int)Position.X, (int)Position.Y, Textures[currentFrame].Width, Textures[currentFrame].Height);
                     boundingBox = new Rectangle((int)(Position.X - cameraPos.X), (int)(Position.Y - cameraPos.Y), texture.Width, texture.Height);
                 }
+
                 // Change movement direction if collision occurs
                 if (CollisionManager.HandleCollision(rightRect, out isOnGround) && canChangeDirection)
                 {

@@ -10,6 +10,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using Penumbra;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 
 namespace Lumos
 {
@@ -23,8 +24,8 @@ namespace Lumos
         public Map _map;
         public Vector2 _cameraPosition;
         private MouseState _previousMouseState;
-        private int MapSizeX = 2000;
-        private int MapSizeY = 200;
+        private int MapSizeX = 400;
+        private int MapSizeY = 400;
         public int _renderAreaWidth = 1000;
         public int _renderAreaHeight = 10000;
         private float EdgePanSpeed = 2f;
@@ -83,8 +84,10 @@ namespace Lumos
         {
             _graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
             _graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
+            //_graphics.PreferredBackBufferWidth = 800;
+            //_graphics.PreferredBackBufferHeight = 600;
             _graphics.IsFullScreen = false;
-            _graphics.SynchronizeWithVerticalRetrace = false;
+            _graphics.SynchronizeWithVerticalRetrace = true;
 
             // TargetElapsedTime = TimeSpan.FromSeconds(1.0 / 700); // Sets the frame rate to 120 FPS
             IsFixedTimeStep = true;
@@ -107,7 +110,7 @@ namespace Lumos
             _items = new List<Item>();
             _projectiles = new List<Projectile>();
             _spriteBatch = new SpriteBatch(GraphicsDevice);
-            _player = new Player(new Vector2(200, 50), "Henkka", Content.Load<Texture2D>("player_00"));
+            _player = new Player(new Vector2((MapSizeX / 2) * 16, (MapSizeY / 2) * 16), "Henkka", Content.Load<Texture2D>("player_00"));
             _myFont = Content.Load<SpriteFont>("MyFont");
 
             // Effect shaderEffect = Content.Load<Effect>("black");
@@ -119,8 +122,20 @@ namespace Lumos
             _enemyTex = Content.Load<Texture2D>("Spaceship1");
             _bg = Content.Load<Texture2D>("bgmountain");
             _map = new Map(MapSizeX, MapSizeY, Content.Load<Texture2D>("player"));
-            _cameraPosition = _player.Pos;
+            /*  if (File.Exists("mapdata.json"))
+              {
+                  _map.MapData = SaveData.LoadMapData();
+              }
+              else
+              {
+                  _map.GenerateMap();
+              }*/
+
             _map.GenerateMap();
+            //_map.SaveMapToFiles();
+            //_map.MapData = SaveData.LoadMapdata();
+            _cameraPosition = _player.Pos;
+
             _toolRectangles = GenerateRectangles(10, 50, 50, 20);
 
             for (int i = 0; i < 1000; i++)
@@ -170,7 +185,11 @@ namespace Lumos
                 UpdateTime(gameTime);
                 MouseState mouseState = CheckMouseInput();
                 if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+                {
+                    SaveData.WriteMapData(_map.MapData);
+
                     Exit();
+                }
 
                 //_player.Update(gameTime);
                 //_cameraPosition = _player.Pos - new Vector2(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
@@ -355,6 +374,7 @@ namespace Lumos
 
             // Draw background
             _spriteBatch.Draw(_bg, Vector2.Zero, _lerpedColor);
+            _map.DrawMap(_spriteBatch, _player, _cameraPosition, GraphicsDevice.Viewport, GraphicsDevice, gameTime);
 
             // Draw inventory if toggled
             if (_player.InventoryToggled)
@@ -380,7 +400,7 @@ namespace Lumos
             }
 
             // Draw map and player
-            _map.DrawMap(_spriteBatch, _player, _cameraPosition, GraphicsDevice.Viewport, GraphicsDevice, gameTime);
+
             _player.Draw(_spriteBatch, _cameraPosition, GraphicsDevice.Viewport);
 
             _spriteBatch.End();

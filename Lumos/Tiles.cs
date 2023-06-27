@@ -15,9 +15,17 @@ namespace Lumos
 
         public static Tile CreateDirt()
         {
-            return new Tile(MapTiles.mithril, TileTextures.DirtTexture, true, true, false);
+            return new Tile(MapTiles.dirt, TileTextures.DirtTexture, false, true, false);
         }
 
-        // Add more factory methods or constructors for other tile types
+        public static Tile CreateEmpty()
+        {
+            return new Tile(MapTiles.empty, TileTextures.EmptyTexture, false, false, false);
+        }
+
+        public static Tile CreateWater()
+        {
+            return new Tile(MapTiles.water, TileTextures.WaterTexture, false, false, false);
+        }
     }
 }

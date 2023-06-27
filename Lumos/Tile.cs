@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,7 @@ namespace Lumos
         private bool v;
 
         public MapTiles MapTile { get; set; }
+
         public Texture2D Texture { get; set; }
 
         public bool Animated { get; set; } = false;

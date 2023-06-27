@@ -21,7 +21,7 @@ namespace Lumos
         public float previousBottom { get; set; }
         public MapTiles selectedTile { get; set; } = MapTiles.water;
 
-        public float MoveSpeed { get; set; } = 2f;
+        public float MoveSpeed { get; set; } = 4f;
 
         public Rectangle Rect { get; set; }
 
@@ -164,7 +164,7 @@ namespace Lumos
             Vector2 newPosition = Pos;
 
             float moveSpeedX = MoveSpeed;
-            float gravity = 2f;
+            float gravity = 0f;
 
             bool isOnGround = false;
 
@@ -192,7 +192,7 @@ namespace Lumos
                     }
                     animation.PlayAnimation("walk");
                 }
-                else if (pressedKeys.Contains(Keys.S))
+                if (pressedKeys.Contains(Keys.S))
                 {
                     // Handle player movement downwards
                     newPosition.Y += MoveSpeed;
@@ -200,15 +200,27 @@ namespace Lumos
                     {
                         newPosition.Y = Pos.Y;
                     }
+                    animation.PlayAnimation("walk");
+                }
+
+                if (pressedKeys.Contains(Keys.W))
+                {
+                    // Handle player movement downwards
+                    newPosition.Y -= MoveSpeed;
+                    if (HandleCollisionWithNewPosition(newPosition, out isOnGround))
+                    {
+                        newPosition.Y = Pos.Y;
+                    }
+                    animation.PlayAnimation("walk");
                 }
                 // Apply gravity to the player when moving right or left
-                newPosition.Y += gravity;
+                //newPosition.Y += gravity;
 
-                if (HandleCollisionWithNewPosition(newPosition, out isOnGround))
-                {
-                    newPosition.Y = Pos.Y;
-                    IsOnGround = true;
-                }
+                /*    if (HandleCollisionWithNewPosition(newPosition, out isOnGround))
+                    {
+                        newPosition.Y = Pos.Y;
+                        IsOnGround = true;
+                    }*/
                 if (pressedKeys.Contains(Keys.Space) && IsOnGround)
                 {
                     newPosition.Y -= 20f;
@@ -230,7 +242,7 @@ namespace Lumos
             PreviousPos = Pos;
             IsOnGround = isOnGround;
             int tileSize = 16; // Assuming each tile is 16x16 in size
-            int radius = 12; // Radius of the circular area
+            int radius = 24; // Radius of the circular area
 
             int centerX = (int)Pos.X / tileSize; // Calculate center X position in tile coordinates
             int centerY = (int)Pos.Y / tileSize; // Calculate center Y position in tile coordinates
