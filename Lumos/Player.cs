@@ -238,6 +238,16 @@ namespace Lumos
                 }
             }
 
+            if (pressedKeys.Contains(Keys.K))
+            {
+                if (!inventoryToggleCooldown)
+                {
+                    Game1.Instance.rainsystem.isActive = !Game1.Instance.rainsystem.isActive;
+                    inventoryToggleCooldown = true;
+                    inventoryToggleCooldownTimer = 0f;
+                }
+            }
+
             Pos = newPosition;
             PreviousPos = Pos;
             IsOnGround = isOnGround;

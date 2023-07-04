@@ -24,8 +24,8 @@ namespace Lumos
         public Map _map;
         public Vector2 _cameraPosition;
         private MouseState _previousMouseState;
-        private int MapSizeX = 400;
-        private int MapSizeY = 400;
+        private int MapSizeX = 1000;
+        private int MapSizeY = 1000;
         public int _renderAreaWidth = 1000;
         public int _renderAreaHeight = 10000;
         private float EdgePanSpeed = 2f;
@@ -51,6 +51,7 @@ namespace Lumos
         private Effect _flashEffect;
         private RenderTarget2D lightingRenderTarget;
         public PenumbraComponent penumbra;
+        public RainSystem rainsystem;
 
         private float testProjectileTimer = 0f;
         private float testProjectileTreshold = 0.0001f;
@@ -105,6 +106,8 @@ namespace Lumos
         protected override void LoadContent()
         {
             TileTextures.LoadContent(Content);
+            rainsystem = new RainSystem();
+            rainsystem.AddRaindrops(5000);
             _damageMessageList = new List<DamageMessage>();
             _enemies = new List<Enemy>();
             _items = new List<Item>();
@@ -227,6 +230,7 @@ namespace Lumos
                 _cameraPosition = _player.Pos - screenCenter;
                 base.Update(gameTime);
             }
+            rainsystem.Update(gameTime);
         }
 
         private void CreateTestProjectiles(GameTime gameTime)
@@ -374,6 +378,7 @@ namespace Lumos
 
             // Draw background
             _spriteBatch.Draw(_bg, Vector2.Zero, _lerpedColor);
+            rainsystem.Draw(_spriteBatch);
             _map.DrawMap(_spriteBatch, _player, _cameraPosition, GraphicsDevice.Viewport, GraphicsDevice, gameTime);
 
             // Draw inventory if toggled

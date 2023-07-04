@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Lumos
@@ -34,6 +35,7 @@ namespace Lumos
         private int tileWidth = 16, tileHeight = 16;
         private Random random = new Random();
         private bool isUpdatingTiles = false;
+        private ManualResetEvent threadSync = new ManualResetEvent(true);
 
         public Map()
         { }
@@ -103,7 +105,7 @@ namespace Lumos
 
                   RandomWalk(startX, startY, caveSize, new Tile(MapTiles.water, TileTextures.WaterTexture, false, false, false));
               }*/
-            int numWaterAreas = 100; // Number of circular water areas to create
+            int numWaterAreas = Game1.Instance._map.Width / 10; // Number of circular water areas to create
             int minRadius = 5; // Minimum radius of each water area
             int maxRadius = 12; // Maximum radius of each water area
 
@@ -112,23 +114,7 @@ namespace Lumos
                 CreateWaterArea(minRadius, maxRadius);
             }
 
-            for (int i = 0; i < 100; i++)
-            {
-                // Choose random starting and ending points for the road
-                Tile startTile = GetRandomNonWaterTile();
-                Tile endTile = GetRandomNonWaterTile(startTile, 50);
-
-                // Find a path between the starting and ending points, avoiding water
-                List<Tile> roadTiles = FindPath(startTile, endTile);
-
-                // Mark the road tiles as road tiles (e.g., create instances of RoadTile class)
-                foreach (var tile in roadTiles)
-                {
-                    int x = GetTileIndex(tile).Item1;
-                    int y = GetTileIndex(tile).Item2;
-                    MapData[x, y] = Tiles.CreateMithril();
-                }
-            }
+            //CreateRoads(10);
 
             /*    for (int x = 0; x < 10000; x++)
                 {
@@ -154,6 +140,50 @@ namespace Lumos
             }*/
 
             //Task.Run(UpdateTiles);
+        }
+
+        public void CreateRoads(int amount)
+        {
+            threadSync.Reset(); // Reset the event to block the new thread initially
+
+            Thread thread = new Thread(() =>
+            {
+                for (int i = 0; i < 1; i++)
+                {
+                    // Choose random starting and ending points for the road
+                    //Tile startTile = GetRandomNonWaterTile();
+                    Tile startTile = MapData[(int)Game1.Instance._player.Pos.X / 16, (int)Game1.Instance._player.Pos.Y / 16];
+                    Tile endTile = GetRandomNonWaterTile(startTile, 40);
+
+                    // Find a path between the starting and ending points, avoiding water
+                    List<Tile> roadTiles = FindPath(startTile, endTile);
+
+                    // Mark the road tiles as road tiles (e.g., create instances of RoadTile class)
+                    foreach (var tile in roadTiles)
+                    {
+                        int x = GetTileIndex(tile).Item1;
+                        int y = GetTileIndex(tile).Item2;
+
+                        if (IsValidTile(x, y))
+                        {
+                            MapData[x, y] = Tiles.CreateMithril();
+                        }
+                        else
+                        {
+                            // Handle out-of-bounds tiles accordingly (e.g., skip or terminate the path)
+                        }
+                    }
+                }
+
+                threadSync.Set(); // Signal that the thread has finished
+            });
+
+            thread.Start();
+        }
+
+        public void WaitForRoadCreation()
+        {
+            threadSync.WaitOne(); // Wait until the thread has finished
         }
 
         /// <summary>
