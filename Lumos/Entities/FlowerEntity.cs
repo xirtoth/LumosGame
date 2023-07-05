@@ -1,10 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Lumos.Entities
 {
@@ -26,7 +22,7 @@ namespace Lumos.Entities
 
         public GrowState _GrowState { get; set; }
 
-        public FlowerEntity(Vector2 position) : base(TileTextures.Mithril, position)
+        public FlowerEntity(Vector2 position) : base(TileTextures.Flower[0], position)
         {
             _GrowState = GrowState.Seed;
             texture = TileTextures.Flower[0];

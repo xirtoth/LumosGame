@@ -1,11 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Timers;
 
 namespace Lumos
 {
@@ -19,7 +14,7 @@ namespace Lumos
 
         private Color Color { get; set; }
         private float elapsedTime;
-        private float destroyTimer;
+        private float destroyTimer = 0f;
         private float movedAmount;
         private Random rand = new Random();
 

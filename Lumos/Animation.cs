@@ -1,8 +1,6 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
-using MonoGame.Extended.Sprites;
-using MonoGame.Extended.Timers;
 
 public class Animation
 {

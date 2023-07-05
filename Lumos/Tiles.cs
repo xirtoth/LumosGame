@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Lumos
+﻿namespace Lumos
 {
     public class Tiles
     {
@@ -25,7 +19,7 @@ namespace Lumos
 
         public static Tile CreateWater()
         {
-            return new Tile(MapTiles.water, TileTextures.WaterTexture, false, false, false);
+            return new Tile(MapTiles.water, TileTextures.WaterTexture, true, true, false);
         }
     }
 }

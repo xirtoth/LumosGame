@@ -1,10 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGame.Extended;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -107,7 +104,7 @@ namespace Lumos
               }*/
             int numWaterAreas = Game1.Instance._map.Width / 10; // Number of circular water areas to create
             int minRadius = 5; // Minimum radius of each water area
-            int maxRadius = 12; // Maximum radius of each water area
+            int maxRadius = 30; // Maximum radius of each water area
 
             for (int i = 0; i < numWaterAreas; i++)
             {
@@ -140,6 +137,28 @@ namespace Lumos
             }*/
 
             //Task.Run(UpdateTiles);
+
+            PathFinding pathFinder = new PathFinding(MapData);
+
+            for (int i = 0; i < 100; i++)
+            {
+                List<(int, int)> path = pathFinder.FindPath((random.Next(1, 400), random.Next(1, 400)), (random.Next(1, 400), random.Next(1, 400)));
+
+                if (path != null)
+                {
+                    // Path found, do something with the path
+                    foreach (var point in path)
+                    {
+                        Console.WriteLine($"X: {point.Item1}, Y: {point.Item2}");
+                        //   Game1.Instance._damageMessageList.Add(new DamageMessage(point.Item1.ToString(), 100f, new Vector2(point.Item1 * 16, point.Item2 * 16), Game1.Instance));
+                    }
+                }
+                else
+                {
+                    // No path found
+                    Console.WriteLine("No path found.");
+                }
+            }
         }
 
         public void CreateRoads(int amount)
@@ -211,7 +230,7 @@ namespace Lumos
                 {
                     if (IsWithinEllipticalArea(x, y, centerX, centerY, radiusX, radiusY) && IsWithinMapBounds(x, y))
                     {
-                        MapData[x, y] = new Tile(MapTiles.water, TileTextures.WaterTexture, false, false, false);
+                        MapData[x, y] = Tiles.CreateWater();
                     }
                 }
             }

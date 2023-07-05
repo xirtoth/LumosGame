@@ -1,16 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using MonoGame.Extended;
-using MonoGame.Extended.Sprites;
-using MonoGame.Extended.Timers;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using Penumbra;
-using System.ComponentModel.DataAnnotations;
-using System.IO;
 using Lumos.Entities;
 
 namespace Lumos
@@ -25,14 +18,14 @@ namespace Lumos
         public Map _map;
         public Vector2 _cameraPosition;
         private MouseState _previousMouseState;
-        private int MapSizeX = 1000;
-        private int MapSizeY = 1000;
+        private int MapSizeX = 500;
+        private int MapSizeY = 500;
         public int _renderAreaWidth = 1000;
         public int _renderAreaHeight = 10000;
         private float EdgePanSpeed = 2f;
         private int _frameCount;
 
-        private int maxEnemies = 100;
+        private int maxEnemies = 10;
         private int maxFlowers = 40;
         private float _elapsedTime;
 
@@ -95,10 +88,10 @@ namespace Lumos
             //_graphics.PreferredBackBufferWidth = 800;
             //_graphics.PreferredBackBufferHeight = 600;
             _graphics.IsFullScreen = false;
-            _graphics.SynchronizeWithVerticalRetrace = false;
+            _graphics.SynchronizeWithVerticalRetrace = true;
 
             // TargetElapsedTime = TimeSpan.FromSeconds(1.0 / 700); // Sets the frame rate to 120 FPS
-            IsFixedTimeStep = false;
+            IsFixedTimeStep = true;
 
             _graphics.ApplyChanges();// TODO: Add your initialization logic here
             Instance = this;
@@ -121,7 +114,7 @@ namespace Lumos
             _items = new List<Item>();
             _projectiles = new List<Projectile>();
             _spriteBatch = new SpriteBatch(GraphicsDevice);
-            _player = new Player(new Vector2((MapSizeX / 2) * 16, (MapSizeY / 2) * 16), "Henkka", Content.Load<Texture2D>("player_00"));
+            _player = new Player(new Vector2(500, 300), "Henkka", Content.Load<Texture2D>("player_00"));
             _myFont = Content.Load<SpriteFont>("MyFont");
 
             // Effect shaderEffect = Content.Load<Effect>("black");
