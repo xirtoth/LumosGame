@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGame.Extended;
 using Penumbra;
 using System.Collections.Generic;
 
@@ -7,7 +8,7 @@ namespace Lumos
 {
     public class Projectile
     {
-        private const float Speed = 5f;
+        private const float Speed = 2.4f;
         private readonly Texture2D texture;
         public Vector2 Position { get; private set; }
         public float aliveTime = 0f;
@@ -24,6 +25,8 @@ namespace Lumos
         {
             Position = position;
             this.direction = direction;
+
+            this.direction *= Speed;
             this.texture = texture;
             Game1.Instance.penumbra.Lights.Add(light);
             light.Position = Position;
@@ -59,7 +62,9 @@ namespace Lumos
 
         public void Draw(SpriteBatch spriteBatch)
         {
+            Color dropColor = Color.FromNonPremultiplied(255, 255, 255, (byte)(0.2 * 255));
             spriteBatch.Draw(texture, Position, Color.White);
+            spriteBatch.DrawLine(Game1.Instance._player.Pos - Game1.Instance._cameraPosition, Position, dropColor);
         }
     }
 }

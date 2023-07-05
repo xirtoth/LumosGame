@@ -30,6 +30,8 @@ namespace Lumos
 
         public static Texture2D[] PlayerWalk { get; set; }
 
+        public static Texture2D[] Flower { get; set; }
+
         public static Texture2D Apple { get; set; }
 
         public static Texture2D Mithril { get; set; }
@@ -40,6 +42,7 @@ namespace Lumos
             Enemy1Walk = new Texture2D[4];
             PlayerIdle = new Texture2D[2];
             PlayerWalk = new Texture2D[4];
+            Flower = new Texture2D[3];
             PlayerWalk[0] = gm.Load<Texture2D>("player_02");
             PlayerWalk[1] = gm.Load<Texture2D>("player_03");
             PlayerWalk[2] = gm.Load<Texture2D>("player_04");
@@ -54,6 +57,9 @@ namespace Lumos
             Enemy1Walk[1] = gm.Load<Texture2D>("slime-move-1");
             Enemy1Walk[2] = gm.Load<Texture2D>("slime-move-2");
             Enemy1Walk[3] = gm.Load<Texture2D>("slime-move-3");
+            Flower[0] = gm.Load<Texture2D>("flower0");
+            Flower[1] = gm.Load<Texture2D>("flower1");
+            Flower[2] = gm.Load<Texture2D>("flower2");
             TileTextures.WaterTexture = gm.Load<Texture2D>("water");
             TileTextures.DirtTexture = gm.Load<Texture2D>("dirt");
             TileTextures.DirtTopTexture = gm.Load<Texture2D>("dirttop");
@@ -61,6 +67,7 @@ namespace Lumos
             TileTextures.GrassTop = gm.Load<Texture2D>("grasstop");
             TileTextures.MyFont = gm.Load<SpriteFont>("MyFont");
             TileTextures.Mithril = gm.Load<Texture2D>("mithril");
+
             Apple = gm.Load<Texture2D>("apple");
         }
     }

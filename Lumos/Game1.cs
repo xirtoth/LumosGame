@@ -11,6 +11,7 @@ using System.Runtime.CompilerServices;
 using Penumbra;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
+using Lumos.Entities;
 
 namespace Lumos
 {
@@ -30,6 +31,9 @@ namespace Lumos
         public int _renderAreaHeight = 10000;
         private float EdgePanSpeed = 2f;
         private int _frameCount;
+
+        private int maxEnemies = 100;
+        private int maxFlowers = 40;
         private float _elapsedTime;
 
         private Texture2D _bg;
@@ -40,6 +44,7 @@ namespace Lumos
         public List<Enemy> _enemies;
         public List<Item> _items;
         public List<Projectile> _projectiles;
+        public List<FlowerEntity> _flowerEntities;
         private float _currentTime = 0f;
         private float _lerpDuration = 100f; // Duration in seconds for each color transition
         private Color _startColor = Color.Black;
@@ -55,6 +60,8 @@ namespace Lumos
 
         private float testProjectileTimer = 0f;
         private float testProjectileTreshold = 0.0001f;
+
+        private string mouseOverText;
 
         public Light light = new PointLight
         {
@@ -88,10 +95,10 @@ namespace Lumos
             //_graphics.PreferredBackBufferWidth = 800;
             //_graphics.PreferredBackBufferHeight = 600;
             _graphics.IsFullScreen = false;
-            _graphics.SynchronizeWithVerticalRetrace = true;
+            _graphics.SynchronizeWithVerticalRetrace = false;
 
             // TargetElapsedTime = TimeSpan.FromSeconds(1.0 / 700); // Sets the frame rate to 120 FPS
-            IsFixedTimeStep = true;
+            IsFixedTimeStep = false;
 
             _graphics.ApplyChanges();// TODO: Add your initialization logic here
             Instance = this;
@@ -106,6 +113,7 @@ namespace Lumos
         protected override void LoadContent()
         {
             TileTextures.LoadContent(Content);
+            _flowerEntities = new List<FlowerEntity>();
             rainsystem = new RainSystem();
             rainsystem.AddRaindrops(5000);
             _damageMessageList = new List<DamageMessage>();
@@ -141,14 +149,19 @@ namespace Lumos
 
             _toolRectangles = GenerateRectangles(10, 50, 50, 20);
 
-            for (int i = 0; i < 1000; i++)
+            for (int i = 0; i < maxEnemies; i++)
             {
-                _enemies.Add(new Enemy(TileTextures.Enemy1Walk, new Vector2(i * 60, 0)));
+                _enemies.Add(new Enemy(TileTextures.Enemy1Walk, new Vector2(rand.Next(10, MapSizeX) * 16, rand.Next(10, MapSizeY) * 16)));
             }
 
             for (int i = 0; i < 0; i++)
             {
                 _items.Add(new Item("apple", "shitty apple", TileTextures.Apple, new Vector2(i * 12, -60)));
+            }
+
+            for (int i = 0; i < maxFlowers; i++)
+            {
+                _flowerEntities.Add(new FlowerEntity(new Vector2(rand.Next(10, MapSizeX) * 16, rand.Next(10, MapSizeY) * 16)));
             }
 
             // TODO: use this.Content to load your game content here
@@ -185,7 +198,7 @@ namespace Lumos
             if (this.IsActive)
             {
                 //CreateTestProjectiles(gameTime);
-                UpdateTime(gameTime);
+                //UpdateTime(gameTime);
                 MouseState mouseState = CheckMouseInput();
                 if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 {
@@ -207,6 +220,11 @@ namespace Lumos
                 foreach (Projectile p in projectileCopy)
                 {
                     p.Update(gameTime);
+                }
+                List<FlowerEntity> flowerCopy = new List<FlowerEntity>(_flowerEntities);
+                foreach (FlowerEntity e in flowerCopy)
+                {
+                    e.Update(gameTime);
                 }
                 List<DamageMessage> damageMessagesCopy = new List<DamageMessage>(_damageMessageList);
                 foreach (DamageMessage dm in damageMessagesCopy)
@@ -252,17 +270,47 @@ namespace Lumos
 
         private MouseState CheckMouseInput()
         {
+            List<Enemy> enemiesToDamage = new List<Enemy>();
             MouseState mouseState = Mouse.GetState();
+            Vector2 mousePosition = new Vector2(mouseState.X, mouseState.Y);
+            // Adjust the mouse position by the camera's position
+            mousePosition += _cameraPosition;
+            int tileX = (int)(mousePosition.X / 16);
+            int tileY = (int)(mousePosition.Y / 16);
+
+            if (tileX >= 0 && tileX < _map.Width && tileY >= 0 && tileY < _map.Height)
+            {
+                if (_map.MapData[tileX, tileY].IsVisible)
+                {
+                    mouseOverText = _map.MapData[tileX, tileY].MapTile.ToString();
+                }
+                else
+                {
+                    mouseOverText = "__";
+                }
+            }
+            // List<Enemy> copyEnemies = new List<Enemy>(_enemies);
+            foreach (Enemy e in _enemies)
+            {
+                int tileXX = (int)(mousePosition.X / 16);
+                int tileYY = (int)(mousePosition.Y / 16);
+                // Transform the mouse position to be relative to the camera
+                Point mousePoint = new Point((int)(mousePosition.X - _cameraPosition.X), (int)(mousePosition.Y - _cameraPosition.Y));
+
+                if (e.boundingBox.Contains(mousePoint))
+                {
+                    mouseOverText = e.Name;
+                    break;
+                }
+            }
 
             if (mouseState.LeftButton == ButtonState.Pressed)
             {
                 // Get the position of the mouse click in the game world coordinates
-                Vector2 mousePosition = new Vector2(mouseState.X, mouseState.Y);
-                // Adjust the mouse position by the camera's position
-                mousePosition += _cameraPosition;
-                List<Enemy> copyEnemies = new List<Enemy>(_enemies);
 
-                foreach (Enemy e in copyEnemies)
+                // List<Enemy> copyEnemies = new List<Enemy>(_enemies);
+
+                foreach (Enemy e in _enemies)
                 {
                     int tileXX = (int)(mousePosition.X / 16);
                     int tileYY = (int)(mousePosition.Y / 16);
@@ -271,15 +319,14 @@ namespace Lumos
 
                     if (e.boundingBox.Contains(mousePoint))
                     {
-                        e.TakeDamage(40, this);
+                        enemiesToDamage.Add(e);
+                        break;
                     }
                 }
                 // Calculate the tile coordinates based on the mouse position
-                int tileX = (int)(mousePosition.X / 16);
-                int tileY = (int)(mousePosition.Y / 16);
 
                 // Check if the tile coordinates are within the map bounds
-                if (tileX >= 0 && tileX < _map.Width && tileY >= 0 && tileY < _map.Height && _map.MapData[tileX, tileY].MapTile != MapTiles.empty)
+                if (IsTileValid(tileX, tileY) && _map.MapData[tileX, tileY].MapTile != MapTiles.empty)
                 {
                     // Change the tile at the clicked position
                     if (!_wasMousePressed)
@@ -298,15 +345,15 @@ namespace Lumos
             if (mouseState.RightButton == ButtonState.Pressed)
             {
                 // Get the position of the mouse click in the game world coordinates
-                Vector2 mousePosition = new Vector2(mouseState.X, mouseState.Y) + _cameraPosition;
+                //Vector2 mousePosition = new Vector2(mouseState.X, mouseState.Y) + _cameraPosition;
                 // Vector2 worldMousePosition = Vector2.Transform(mousePosition, Matrix.Invert(_cameraPosition));
 
                 // Calculate the tile coordinates based on the mouse position
-                int tileX = (int)(mousePosition.X / 16);
-                int tileY = (int)(mousePosition.Y / 16);
+                //int tileX = (int)(mousePosition.X / 16);
+                //int tileY = (int)(mousePosition.Y / 16);
 
                 // Check if the tile coordinates are within the map bounds
-                if (tileX >= 0 && tileX < _map.Width && tileY >= 0 && tileY < _map.Height)
+                if (IsTileValid(tileX, tileY))
                 {
                     // Change the tile at the clicked position
                     _map.MapData[tileX, tileY] = new Tile(MapTiles.dirt, TileTextures.DirtTexture, true, false);
@@ -336,7 +383,16 @@ namespace Lumos
 
             _cameraPosition += panDirection * panSpeed;
             // _cameraPosition = _enemies[0].Position;
+            foreach (Enemy e in enemiesToDamage)
+            {
+                _enemies.Remove(e);
+            }
             return mouseState;
+        }
+
+        private bool IsTileValid(int tileX, int tileY)
+        {
+            return tileX >= 0 && tileX < _map.Width && tileY >= 0 && tileY < _map.Height;
         }
 
         private void UpdateTime(GameTime gameTime)
@@ -374,10 +430,10 @@ namespace Lumos
             GraphicsDevice.Clear(_lerpedColor);
             penumbra.BeginDraw();
 
-            _spriteBatch.Begin();
+            _spriteBatch.Begin(SpriteSortMode.Deferred);
 
             // Draw background
-            _spriteBatch.Draw(_bg, Vector2.Zero, _lerpedColor);
+            //  _spriteBatch.Draw(_bg, Vector2.Zero, _lerpedColor);
             rainsystem.Draw(_spriteBatch);
             _map.DrawMap(_spriteBatch, _player, _cameraPosition, GraphicsDevice.Viewport, GraphicsDevice, gameTime);
 
@@ -387,6 +443,10 @@ namespace Lumos
                 Game1.Instance._player.Inventory.UI.DrawInventory(Game1.Instance._player.Inventory);
             }
 
+            foreach (FlowerEntity f in _flowerEntities)
+            {
+                f.Draw(_spriteBatch, _cameraPosition, gameTime);
+            }
             // Draw enemies
             foreach (Enemy e in _enemies)
             {
@@ -416,8 +476,7 @@ namespace Lumos
             _spriteBatch.Begin();
 
             // Draw additional UI elements
-            _spriteBatch.DrawString(_myFont, _player.Name + " " + _player.Pos.X + " " + _player.Pos.Y, new Vector2(-2, -2), Color.Black);
-            _spriteBatch.DrawString(_myFont, _player.Name + " " + _player.PreviousPos.X + " " + _player.PreviousPos.Y, new Vector2(-2, 10), Color.Black);
+            _spriteBatch.DrawString(_myFont, mouseOverText, new Vector2(100, 100), Color.Red);
 
             // Draw tool rectangles
             foreach (Rectangle toolRectangle in _toolRectangles)

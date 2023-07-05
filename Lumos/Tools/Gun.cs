@@ -35,7 +35,7 @@ namespace Lumos.Tools
                 Vector2 direction = Vector2.Normalize(mousePosition - playerPosition);
 
                 Game1.Instance._damageMessageList.Add(new DamageMessage("Shooting gun", 2f, Game1.Instance._player.Pos, Game1.Instance));
-                Game1.Instance._projectiles.Add(new Projectile(10f, playerPosition, direction, TileTextures.Apple));
+                Game1.Instance._projectiles.Add(new Projectile(2f, playerPosition, direction, TileTextures.Apple));
                 shootTimer = ShootDelay;
             }
         }

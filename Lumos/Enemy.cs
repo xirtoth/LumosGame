@@ -17,6 +17,8 @@ namespace Lumos
         private float rotationAngle;
         private Vector2 velocity;
         private Vector2 origin;
+
+        public string Name { get; private set; }
         public Vector2 Destination { get; set; }
         public float MovementSpeed { get; set; }
         public Rectangle boundingBox { get; set; } = Rectangle.Empty;
@@ -44,6 +46,7 @@ namespace Lumos
 
         private bool Moving = false;
         private float movementTime = 1f;
+        private Color EnemyColor;
 
         private bool isOnGround = false;
 
@@ -59,6 +62,8 @@ namespace Lumos
             Destination = position;
             Animated = false;
             MovementSpeed = rand.Next(10, 25);
+            Name = "Slime";
+            EnemyColor = new Color(rand.Next(1, 256), rand.Next(1, 256), rand.Next(1, 256));
         }
 
         public Enemy(Texture2D[] textures, Vector2 position) : base(textures[0], position)
@@ -71,6 +76,8 @@ namespace Lumos
             Animated = true;
             Position = position;
             MovementSpeed = rand.Next(25, 50);
+            Name = "Slime";
+            EnemyColor = new Color(rand.Next(1, 256), rand.Next(1, 256), rand.Next(1, 256));
         }
 
         private void CheckCollision(Tile[,] map, Vector2 cameraPos)
@@ -129,84 +136,7 @@ namespace Lumos
             // Calculate movement direction
             Vector2 direction = Destination - position;
 
-            if (Moving)
-            {
-                if (directionChangeTime < 0)
-                {
-                    canChangeDirection = true;
-                    directionChangeTime = maxDirectionChangeTime;
-                }
-
-                float distanceToMove = MovementSpeed * deltaTime;
-                previousPosition = Position;
-
-                // Move horizontally if on the ground and not colliding
-                if (isOnGround && !CollisionManager.HandleCollision(leftRect, out isOnGround))
-                {
-                    float movementOffset = (movementDir == 0) ? -distanceToMove : distanceToMove;
-                    Position = new Vector2(Position.X + movementOffset, Position.Y);
-                    CollisionRect = new Rectangle((int)Position.X, (int)Position.Y, Textures[currentFrame].Width, Textures[currentFrame].Height);
-                    boundingBox = new Rectangle((int)(Position.X - cameraPos.X), (int)(Position.Y - cameraPos.Y), texture.Width, texture.Height);
-                }
-
-                // Change movement direction if collision occurs
-                if (CollisionManager.HandleCollision(leftRect, out isOnGround) && canChangeDirection)
-                {
-                    movementDir = (movementDir == 0) ? 1 : 0;
-                    Position = previousPosition;
-                    canChangeDirection = false;
-                    directionChangeTime = maxDirectionChangeTime;
-                    float movementOffset = (movementDir == 0) ? -distanceToMove : distanceToMove;
-                    Position = new Vector2(Position.X + movementOffset, Position.Y);
-                    leftRect = new Rectangle((int)Position.X - 2, (int)Position.Y + 8, Textures[currentFrame].Width - 20, Textures[currentFrame].Height - 20);
-                }
-
-                // Update rightRect after leftRect collision checks
-                rightRect = new Rectangle((int)Position.X + Textures[currentFrame].Width + 2, (int)Position.Y + 8, Textures[currentFrame].Width - 20, Textures[currentFrame].Height - 20);
-
-                // Move horizontally if on the ground and not colliding
-                if (isOnGround && !CollisionManager.HandleCollision(rightRect, out isOnGround))
-                {
-                    float movementOffset = (movementDir == 0) ? -distanceToMove : distanceToMove;
-                    Position = new Vector2(Position.X + movementOffset, Position.Y);
-                    CollisionRect = new Rectangle((int)Position.X, (int)Position.Y, Textures[currentFrame].Width, Textures[currentFrame].Height);
-                    boundingBox = new Rectangle((int)(Position.X - cameraPos.X), (int)(Position.Y - cameraPos.Y), texture.Width, texture.Height);
-                }
-
-                // Change movement direction if collision occurs
-                if (CollisionManager.HandleCollision(rightRect, out isOnGround) && canChangeDirection)
-                {
-                    movementDir = (movementDir == 0) ? 1 : 0;
-                    Position = previousPosition;
-                    canChangeDirection = false;
-                    directionChangeTime = maxDirectionChangeTime;
-                    float movementOffset = (movementDir == 0) ? -distanceToMove : distanceToMove;
-                    Position = new Vector2(Position.X - movementOffset, Position.Y);
-                    rightRect = new Rectangle((int)Position.X + Textures[currentFrame].Width + 2, (int)Position.Y + 8, Textures[currentFrame].Width - 20, Textures[currentFrame].Height - 20);
-                }
-
-                // Check for collision with the environment in the Y direction
-                Position = new Vector2(Position.X, Position.Y + gravity);
-                if (CollisionManager.HandleCollision(CollisionRect, out isOnGround))
-                {
-                    Position.Y = previousPosition.Y;
-                    isOnGround = true;
-                    CollisionRect = new Rectangle((int)Position.X, (int)Position.Y, Textures[currentFrame].Width, Textures[currentFrame].Height);
-                    boundingBox = new Rectangle((int)(Position.X - cameraPos.X), (int)(Position.Y - cameraPos.Y), texture.Width, texture.Height);
-                }
-
-                Textures = TileTextures.Enemy1Walk;
-            }
-
-            // Apply gravity in the Y direction
-            Position = new Vector2(Position.X, Position.Y + gravity);
-            if (CollisionManager.HandleCollision(CollisionRect, out isOnGround))
-            {
-                Position.Y = previousPosition.Y;
-                isOnGround = true;
-                CollisionRect = new Rectangle((int)Position.X, (int)Position.Y, Textures[currentFrame].Width, Textures[currentFrame].Height);
-                boundingBox = new Rectangle((int)(Position.X - cameraPos.X), (int)(Position.Y - cameraPos.Y), texture.Width, texture.Height);
-            }
+            MoveEnemy(cameraPos, ref leftRect, ref rightRect, deltaTime, player.Pos);
 
             // Update animation and elapsed time
             if (elapsedTime > movementTime)
@@ -236,6 +166,166 @@ namespace Lumos
             //DebugDrawRectangle(leftRect, Color.Red);
         }
 
+        /*   private void MoveEnemy(Vector2 cameraPos, ref Rectangle leftRect, ref Rectangle rightRect, float deltaTime, float gravity)
+           {
+               if (Moving)
+               {
+                   if (directionChangeTime < 0)
+                   {
+                       canChangeDirection = true;
+                       directionChangeTime = maxDirectionChangeTime;
+                   }
+
+                   float distanceToMove = MovementSpeed * deltaTime;
+                   previousPosition = Position;
+
+                   // Move horizontally if on the ground and not colliding
+                   if (isOnGround && !CollisionManager.HandleCollision(leftRect, out isOnGround))
+                   {
+                       float movementOffset = (movementDir == 0) ? -distanceToMove : distanceToMove;
+                       Position = new Vector2(Position.X + movementOffset, Position.Y);
+                       CollisionRect = new Rectangle((int)Position.X, (int)Position.Y, Textures[currentFrame].Width, Textures[currentFrame].Height);
+                       boundingBox = new Rectangle((int)(Position.X - cameraPos.X), (int)(Position.Y - cameraPos.Y), texture.Width, texture.Height);
+                   }
+
+                   // Change movement direction if collision occurs
+                   if (CollisionManager.HandleCollision(leftRect, out isOnGround) && canChangeDirection)
+                   {
+                       movementDir = (movementDir == 0) ? 1 : 0;
+                       Position = previousPosition;
+                       canChangeDirection = false;
+                       directionChangeTime = maxDirectionChangeTime;
+                       float movementOffset = (movementDir == 0) ? -distanceToMove : distanceToMove;
+                       Position = new Vector2(Position.X + movementOffset, Position.Y);
+                       leftRect = new Rectangle((int)Position.X - 2, (int)Position.Y + 8, Textures[currentFrame].Width - 20, Textures[currentFrame].Height - 20);
+                   }
+
+                   // Update rightRect after leftRect collision checks
+                   rightRect = new Rectangle((int)Position.X + Textures[currentFrame].Width + 2, (int)Position.Y + 8, Textures[currentFrame].Width - 20, Textures[currentFrame].Height - 20);
+
+                   // Move horizontally if on the ground and not colliding
+                   if (isOnGround && !CollisionManager.HandleCollision(rightRect, out isOnGround))
+                   {
+                       float movementOffset = (movementDir == 0) ? -distanceToMove : distanceToMove;
+                       Position = new Vector2(Position.X + movementOffset, Position.Y);
+                       CollisionRect = new Rectangle((int)Position.X, (int)Position.Y, Textures[currentFrame].Width, Textures[currentFrame].Height);
+                       boundingBox = new Rectangle((int)(Position.X - cameraPos.X), (int)(Position.Y - cameraPos.Y), texture.Width, texture.Height);
+                   }
+
+                   // Change movement direction if collision occurs
+                   if (CollisionManager.HandleCollision(rightRect, out isOnGround) && canChangeDirection)
+                   {
+                       movementDir = (movementDir == 0) ? 1 : 0;
+                       Position = previousPosition;
+                       canChangeDirection = false;
+                       directionChangeTime = maxDirectionChangeTime;
+                       float movementOffset = (movementDir == 0) ? -distanceToMove : distanceToMove;
+                       Position = new Vector2(Position.X - movementOffset, Position.Y);
+                       rightRect = new Rectangle((int)Position.X + Textures[currentFrame].Width + 2, (int)Position.Y + 8, Textures[currentFrame].Width - 20, Textures[currentFrame].Height - 20);
+                   }
+
+                   // Check for collision with the environment in the Y direction
+                   Position = new Vector2(Position.X, Position.Y + gravity);
+                   if (CollisionManager.HandleCollision(CollisionRect, out isOnGround))
+                   {
+                       Position.Y = previousPosition.Y;
+                       isOnGround = true;
+                       CollisionRect = new Rectangle((int)Position.X, (int)Position.Y, Textures[currentFrame].Width, Textures[currentFrame].Height);
+                       boundingBox = new Rectangle((int)(Position.X - cameraPos.X), (int)(Position.Y - cameraPos.Y), texture.Width, texture.Height);
+                   }
+
+                   Textures = TileTextures.Enemy1Walk;
+               }
+
+               // Apply gravity in the Y direction
+               Position = new Vector2(Position.X, Position.Y + gravity);
+               if (CollisionManager.HandleCollision(CollisionRect, out isOnGround))
+               {
+                   Position.Y = previousPosition.Y;
+                   isOnGround = true;
+                   CollisionRect = new Rectangle((int)Position.X, (int)Position.Y, Textures[currentFrame].Width, Textures[currentFrame].Height);
+                   boundingBox = new Rectangle((int)(Position.X - cameraPos.X), (int)(Position.Y - cameraPos.Y), texture.Width, texture.Height);
+               }
+           } */
+
+        private void MoveEnemy(Vector2 cameraPos, ref Rectangle leftRect, ref Rectangle rightRect, float deltaTime, Vector2 playerPosition)
+        {
+            if (Moving)
+            {
+                if (directionChangeTime < 0)
+                {
+                    canChangeDirection = true;
+                    directionChangeTime = maxDirectionChangeTime;
+                }
+
+                float distanceToMove = MovementSpeed * deltaTime;
+                previousPosition = Position;
+
+                // Calculate the movement offsets for both horizontal and vertical directions
+                float horizontalOffset = Math.Sign(playerPosition.X - Position.X) * distanceToMove;
+                float verticalOffset = Math.Sign(playerPosition.Y - Position.Y) * distanceToMove;
+
+                // Move horizontally towards the player's position
+                Position = new Vector2(Position.X + horizontalOffset, Position.Y);
+                CollisionRect = new Rectangle((int)Position.X, (int)Position.Y, Textures[currentFrame].Width, Textures[currentFrame].Height);
+                boundingBox = new Rectangle((int)(Position.X - cameraPos.X), (int)(Position.Y - cameraPos.Y), texture.Width, texture.Height);
+
+                // Move vertically towards the player's position
+                Position = new Vector2(Position.X, Position.Y + verticalOffset);
+                CollisionRect = new Rectangle((int)Position.X, (int)Position.Y, Textures[currentFrame].Width, Textures[currentFrame].Height);
+                boundingBox = new Rectangle((int)(Position.X - cameraPos.X), (int)(Position.Y - cameraPos.Y), texture.Width, texture.Height);
+
+                // Change movement direction if collision occurs horizontally
+                if (CollisionManager.HandleCollision(leftRect, out isOnGround) && canChangeDirection)
+                {
+                    movementDir = (movementDir == 0) ? 1 : 0;
+                    Position = previousPosition;
+                    canChangeDirection = false;
+                    directionChangeTime = maxDirectionChangeTime;
+                    horizontalOffset = Math.Sign(playerPosition.X - Position.X) * distanceToMove;
+                    Position = new Vector2(Position.X + horizontalOffset, Position.Y);
+                    leftRect = new Rectangle((int)Position.X - 2, (int)Position.Y + 8, Textures[currentFrame].Width - 20, Textures[currentFrame].Height - 20);
+                }
+
+                // Update rightRect after leftRect collision checks
+                rightRect = new Rectangle((int)Position.X + Textures[currentFrame].Width + 2, (int)Position.Y + 8, Textures[currentFrame].Width - 20, Textures[currentFrame].Height - 20);
+
+                // Change movement direction if collision occurs horizontally
+                if (CollisionManager.HandleCollision(rightRect, out isOnGround) && canChangeDirection)
+                {
+                    movementDir = (movementDir == 0) ? 1 : 0;
+                    Position = previousPosition;
+                    canChangeDirection = false;
+                    directionChangeTime = maxDirectionChangeTime;
+                    horizontalOffset = Math.Sign(playerPosition.X - Position.X) * distanceToMove;
+                    Position = new Vector2(Position.X - horizontalOffset, Position.Y);
+                    rightRect = new Rectangle((int)Position.X + Textures[currentFrame].Width + 2, (int)Position.Y + 8, Textures[currentFrame].Width - 20, Textures[currentFrame].Height - 20);
+                }
+
+                // Check for collision with the environment in the Y direction
+                Position = new Vector2(Position.X, Position.Y);
+                if (CollisionManager.HandleCollision(CollisionRect, out isOnGround))
+                {
+                    Position.Y = previousPosition.Y;
+                    isOnGround = true;
+                    CollisionRect = new Rectangle((int)Position.X, (int)Position.Y, Textures[currentFrame].Width, Textures[currentFrame].Height);
+                    boundingBox = new Rectangle((int)(Position.X - cameraPos.X), (int)(Position.Y - cameraPos.Y), texture.Width, texture.Height);
+                }
+
+                Textures = TileTextures.Enemy1Walk;
+            }
+
+            // Apply gravity in the Y direction
+            Position = new Vector2(Position.X, Position.Y);
+            if (CollisionManager.HandleCollision(CollisionRect, out isOnGround))
+            {
+                Position.Y = previousPosition.Y;
+                isOnGround = true;
+                CollisionRect = new Rectangle((int)Position.X, (int)Position.Y, Textures[currentFrame].Width, Textures[currentFrame].Height);
+                boundingBox = new Rectangle((int)(Position.X - cameraPos.X), (int)(Position.Y - cameraPos.Y), texture.Width, texture.Height);
+            }
+        }
+
         public bool IsVisible(Game1 game)
         {
             Rectangle screenBounds = new Rectangle(0, 0, game.GraphicsDevice.Viewport.Width, game.GraphicsDevice.Viewport.Height);
@@ -249,8 +339,10 @@ namespace Lumos
 
             {
                 // Game1.Instance.penumbra.BeginDraw();
-                Color color2 = new Color(Color.White.R, Color.White.G, Color.White.B, (byte)128);
-                spriteBatch.Draw(Textures[currentFrame], Position - cameraPos, null, color2);
+                // Color color2 = new Color(Color.White.R, Color.White.G, Color.White.B, (byte)128);
+                // Color randomColor = new Color(rand.Next(256), rand.Next(256), rand.Next(256));
+
+                spriteBatch.Draw(Textures[currentFrame], Position - cameraPos, null, EnemyColor);
             }
             else
             {

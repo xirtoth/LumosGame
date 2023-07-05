@@ -18,7 +18,7 @@ namespace Lumos
 
     public class RainSystem
     {
-        private List<RainDrop> raindrops;
+        private readonly List<RainDrop> raindrops;
         private Random rand;
         public bool isActive;
 

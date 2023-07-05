@@ -355,28 +355,10 @@ namespace Lumos
 
         public void DrawMap(SpriteBatch spriteBatch, Player player, Microsoft.Xna.Framework.Vector2 cameraPos, Viewport viewport, GraphicsDevice gd, GameTime gameTime)
         {
-            Color waterColor = Color.White;
-            Color startColor = Color.White;
-            Color endColor = Color.DarkBlue;
-            elapsedTime += (float)(gameTime.ElapsedGameTime.TotalMilliseconds / 1000);
-
-            float t = elapsedTime / 0.5f; // Normalize elapsed time between 0 and 1
-            if (elapsedTime < 1f)
-            {
-                waterColor = Color.Lerp(startColor, endColor, t);
-            }
-            if (elapsedTime > 1f)
-            {
-                startColor = endColor;
-                endColor = startColor;
-                elapsedTime = 0f;
-                waterColor = Color.Lerp(startColor, endColor, t);
-            }
-
-            // Task.Run(() => UpdateTiles());
-            Texture2D _texture;
-            _texture = new Texture2D(gd, 1, 1);
-            _texture.SetData(new Color[] { Color.Red });
+            //Color waterColor = Color.White;
+            //Color startColor = Color.White;
+            //Color endColor = Color.DarkBlue;
+            // elapsedTime += (float)(gameTime.ElapsedGameTime.TotalMilliseconds / 1000);
 
             int startX = (int)(cameraPos.X / tileWidth) - 1;
             int startY = (int)(cameraPos.Y / tileHeight) - 1;
@@ -410,63 +392,15 @@ namespace Lumos
                             }
                         }
 
-                        if (MapData[x, y].MapTile == MapTiles.dirt)
-                        {
-                            /*  if (y > 0)
-                              {
-                                  if (MapData[x, y - 1].MapTile == MapTiles.empty)
-                                  {
-                                      MapData[x, y] = new Tile(MapTiles.grassTop, TileTextures.GrassTop, false, false, true);
-                                  }
-                              }*/
-                            Rectangle tileRect = new Rectangle(
-                        (int)tilePosition.X + x * tileWidth,
-                        (int)tilePosition.Y + y * tileHeight,
-                        tileWidth,
-                        tileHeight);
-
-                            /* var testRect = new Rectangle(x * tileWidth, y * tileHeight, tileWidth, tileHeight);
-                             if (x >= minX && x <= maxX && y >= minY && y <= maxY)
-                             {
-                                 if (player.Rect.Intersects(testRect))
-                                 {
-                                     spriteBatch.Draw(_texture, new Rectangle((int)tilePosition.X, (int)tilePosition.Y, tileWidth, tileHeight), Color.White);
-                                     // CollisionManager.HandleCollision(player, testRect);
-                                 }
-                             }*/
-                        }
                         if (MapData[x, y].IsVisible)
                         {
                             spriteBatch.Draw(MapData[x, y].Texture, tilePosition, Color.White);
                         }
-                        else
-                        {
-                            //  spriteBatch.Draw(MapData[x, y].Texture, tilePosition, Color.Black);
-                            spriteBatch.Draw(TileTextures.EmptyTexture, tilePosition, Color.White);
-                        }
-                        /*    else if (MapData[x, y].MapTile == MapTiles.dirtTop)
-                            {
-                                {
-                                    spriteBatch.Draw(MapData[x, y].Texture, tilePosition, Color.Red);
-                                }
-                            }
-                            else if (MapData[x, y].MapTile == MapTiles.water)
-                            {
-                                spriteBatch.Draw(MapData[x, y].Texture, tilePosition, waterColor);
-                            }
-                            else if (MapData[x, y].MapTile == MapTiles.grassTop)
-
-                            {
-                                spriteBatch.Draw(TileTextures.GrassTop, tilePosition, Color.White);
-                            }*/
-                        //  spriteBatch.Draw(_texture, player.HorizontalCollisionRect, Color.Blue * 0.5f);
-                        //  spriteBatch.Draw(_texture, player.VerticalCollisionRect, Color.Green * 0.5f);
-
-                        // Draw player's rays for debugging
-                        /*  foreach (var ray in player.Rays)
-                          {
-                              spriteBatch.DrawLine(ray.Start, ray.End, Color.Yellow);
-                          }*/
+                        /*   else
+                           {
+                               //  spriteBatch.Draw(MapData[x, y].Texture, tilePosition, Color.Black);
+                               //  spriteBatch.Draw(TileTextures.EmptyTexture, tilePosition, Color.White);
+                           } */
                     }
                 }
             }
